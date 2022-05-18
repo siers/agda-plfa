@@ -1,10 +1,9 @@
 module relationsbinary where
 
--- open Eq using (_≡_; _≢_; refl; cong)
--- import Relation.Binary.PropositionalEquality as Eq
 open import Function using (_∘_)
 open import Data.String.Base hiding (concat; intersperse)
 open import Data.List using (List; _∷_; []; intersperse; foldl)
+open import Data.Nat
 
 open import IO using (run; putStrLn)
 open import Level using (0ℓ)
@@ -78,15 +77,7 @@ inc-can (C (o O)) = C (o I)
 inc-can {b} (C (o I)) = helper (inc-can (C o))
   where
     helper : ∀ {b : Bin} → Can (inc b) → Can ((inc b) O)
-    helper {⟨⟩} (C ⟨1⟩) = C (⟨1⟩ O)
-    helper {⟨⟩ O} (C ⟨1⟩) = C (⟨1⟩ O)
-    helper {⟨⟩ I} (C (⟨1⟩ O)) = C (⟨1⟩ O O)
-    helper {c O} (C (o I)) = C (o I O)
-    -- helper {(c O) I} (C (o I O)) = C (o I O O)
-    helper {c I} (C (inc c)) = C ((inc c) O)
-    -- Incomplete pattern matching for helper. Missing cases:
-    --   helper {(.⟨⟩ O) I} (C (⟨1⟩ O))
-    --   helper {(b I) I} x
-    -- when checking the definition of helper
+    helper {⟨⟩ I} (C o) = C (o O)
+    helper {c} (C o) = C (o O)
 
 main = run {0ℓ} ((putStrLn ∘ foldl (_++_) "" ∘ intersperse "\n") outputs)
