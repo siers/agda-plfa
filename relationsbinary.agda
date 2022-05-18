@@ -69,15 +69,32 @@ outputs =
   ("7 + 1 = " ++ ((binToStr ∘ inc) (⟨⟩ I I I))) ∷
   []
 
-inc-can : ∀ {b : Bin} → Can b → Can (inc b)
-inc-can {⟨⟩} (C ())
-inc-can {⟨⟩ O} ⟨0⟩ = C ⟨1⟩
-inc-can {⟨⟩ I} (C ⟨1⟩) = C (⟨1⟩ O)
-inc-can (C (o O)) = C (o I)
-inc-can {b} (C (o I)) = helper (inc-can (C o))
+inc-can-long : ∀ {b : Bin} → Can b → Can (inc b)
+inc-can-long {⟨⟩} (C ())
+inc-can-long {⟨⟩ O} ⟨0⟩ = C ⟨1⟩
+inc-can-long {⟨⟩ I} (C ⟨1⟩) = C (⟨1⟩ O)
+inc-can-long (C (o O)) = C (o I)
+inc-can-long {b} (C (o I)) = can-suffix-O (inc-can-long (C o))
   where
-    helper : ∀ {b : Bin} → Can (inc b) → Can ((inc b) O)
-    helper {⟨⟩ I} (C o) = C (o O)
-    helper {c} (C o) = C (o O)
+    can-suffix-O : ∀ {b : Bin} → Can (inc b) → Can ((inc b) O)
+    can-suffix-O {⟨⟩ I} (C o) = C (o O)
+    can-suffix-O {c} (C o) = C (o O)
+
+inc-one : ∀ {b : Bin} → One b → One (inc b)
+inc-one ⟨1⟩ = (⟨1⟩ O)
+inc-one (o O) = (o I)
+inc-one (o I) = (inc-one o) O
+
+inc-can-short : ∀ {b : Bin} → Can b → Can (inc b)
+inc-can-short {⟨⟩} (C ())
+inc-can-short {⟨⟩ O} ⟨0⟩ = C ⟨1⟩
+inc-can-short {b} (C o) = C (inc-one o)
+
+fromCan : ∀ {b : Bin} → Can b → Bin
+fromCan {b} _ = b
+
+-- to : ∀ {n : ℕ} → Can Bin
+-- to zero = ⟨O⟩
+-- to (suc n) = inc-can (to n)
 
 main = run {0ℓ} ((putStrLn ∘ foldl (_++_) "" ∘ intersperse "\n") outputs)
