@@ -24,7 +24,7 @@ inc (b O) = b I
 inc (b I) = (inc b) O
 
 data One : Bin → Set where
-  ⟨1⟩ : One (⟨⟩ I)
+  ⟨I⟩ : One (⟨⟩ I)
   _O : ∀ {b : Bin} → One b → One (b O)
   _I : ∀ {b : Bin} → One b → One (b I)
 
@@ -49,16 +49,16 @@ can't3 : Can (⟨⟩ O I) → ⊥
 can't3 (C (() O I))
 
 _ : Can (⟨⟩ I)
-_ = C (⟨1⟩)
+_ = C (⟨I⟩)
 
 _ : Can (⟨⟩ I O)
-_ = C (⟨1⟩ O)
+_ = C (⟨I⟩ O)
 
 _ : Can (⟨⟩ I I)
-_ = C (⟨1⟩ I)
+_ = C (⟨I⟩ I)
 
 _ : Can (⟨⟩ I O O)
-_ = C (⟨1⟩ O O)
+_ = C (⟨I⟩ O O)
 
 outputs : List String
 outputs =
@@ -71,8 +71,8 @@ outputs =
 
 inc-can-long : ∀ {b : Bin} → Can b → Can (inc b)
 inc-can-long {⟨⟩} (C ())
-inc-can-long {⟨⟩ O} ⟨0⟩ = C ⟨1⟩
-inc-can-long {⟨⟩ I} (C ⟨1⟩) = C (⟨1⟩ O)
+inc-can-long {⟨⟩ O} ⟨0⟩ = C ⟨I⟩
+inc-can-long {⟨⟩ I} (C ⟨I⟩) = C (⟨I⟩ O)
 inc-can-long (C (o O)) = C (o I)
 inc-can-long {b} (C (o I)) = can-suffix-O (inc-can-long (C o))
   where
@@ -81,13 +81,13 @@ inc-can-long {b} (C (o I)) = can-suffix-O (inc-can-long (C o))
     can-suffix-O {c} (C o) = C (o O)
 
 inc-one : ∀ {b : Bin} → One b → One (inc b)
-inc-one ⟨1⟩ = (⟨1⟩ O)
+inc-one ⟨I⟩ = (⟨I⟩ O)
 inc-one (o O) = (o I)
 inc-one (o I) = (inc-one o) O
 
 inc-can-short : ∀ {b : Bin} → Can b → Can (inc b)
 inc-can-short {⟨⟩} (C ())
-inc-can-short {⟨⟩ O} ⟨0⟩ = C ⟨1⟩
+inc-can-short {⟨⟩ O} ⟨0⟩ = C ⟨I⟩
 inc-can-short {b} (C o) = C (inc-one o)
 
 fromCan : ∀ {b : Bin} → Can b → Bin
