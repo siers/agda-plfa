@@ -1,9 +1,10 @@
 module relationsbinary where
 
 open import Function using (_∘_)
-open import Data.String.Base hiding (concat; intersperse)
+open import Data.String.Base hiding (concat; intersperse; show)
 open import Data.List using (List; _∷_; []; intersperse; foldl)
 open import Data.Nat
+open import Data.Nat.Show using (show)
 
 open import IO using (run; putStrLn)
 open import Level using (0ℓ)
@@ -60,15 +61,6 @@ _ = C (⟨I⟩ I)
 _ : Can (⟨⟩ I O O)
 _ = C (⟨I⟩ O O)
 
-outputs : List String
-outputs =
-  (". + 1 = " ++ ((binToStr ∘ inc) ⟨⟩)) ∷
-  ("0 + 1 = " ++ ((binToStr ∘ inc) (⟨⟩ O))) ∷
-  ("1 + 1 = " ++ ((binToStr ∘ inc) (⟨⟩ I))) ∷
-  ("5 + 1 = " ++ ((binToStr ∘ inc) (⟨⟩ I O I))) ∷
-  ("7 + 1 = " ++ ((binToStr ∘ inc) (⟨⟩ I I I))) ∷
-  []
-
 inc-can-long : ∀ {b : Bin} → Can b → Can (inc b)
 inc-can-long {⟨⟩} (C ())
 inc-can-long {⟨⟩ O} ⟨0⟩ = C ⟨I⟩
@@ -78,7 +70,7 @@ inc-can-long {b} (C (o I)) = can-suffix-O (inc-can-long (C o))
   where
     can-suffix-O : ∀ {b : Bin} → Can (inc b) → Can ((inc b) O)
     can-suffix-O {⟨⟩ I} (C o) = C (o O)
-    can-suffix-O {c} (C o) = C (o O)
+    can-suffix-O {b} (C o) = C (o O)
 
 inc-one : ∀ {b : Bin} → One b → One (inc b)
 inc-one ⟨I⟩ = (⟨I⟩ O)
@@ -86,15 +78,33 @@ inc-one (o O) = (o I)
 inc-one (o I) = (inc-one o) O
 
 inc-can-short : ∀ {b : Bin} → Can b → Can (inc b)
-inc-can-short {⟨⟩} (C ())
 inc-can-short {⟨⟩ O} ⟨0⟩ = C ⟨I⟩
 inc-can-short {b} (C o) = C (inc-one o)
 
 fromCan : ∀ {b : Bin} → Can b → Bin
 fromCan {b} _ = b
 
--- to : ∀ {n : ℕ} → Can Bin
--- to zero = ⟨O⟩
--- to (suc n) = inc-can (to n)
+to : ∀ (n : ℕ) → Bin
+to zero = ⟨⟩ O
+to (suc n) = inc (to n)
+
+to-can : ∀ (n : ℕ) → Can (to n)
+to-can zero = ⟨O⟩
+to-can (suc n) = inc-can-short (to-can n)
+
+from : ∀ (b : Bin) → ℕ
+from ⟨⟩ = zero
+from (b O) = 2 * (from b)
+from (b I) = 1 + 2 * (from b)
+
+outputs : List String
+outputs =
+  (". + 1 = " ++ ((binToStr ∘ inc) ⟨⟩)) ∷
+  ("0 + 1 = " ++ ((binToStr ∘ inc) (⟨⟩ O))) ∷
+  ("1 + 1 = " ++ ((binToStr ∘ inc) (⟨⟩ I))) ∷
+  ("5 + 1 = " ++ ((binToStr ∘ inc) (⟨⟩ I O I))) ∷
+  ("7 + 1 = " ++ ((binToStr ∘ inc) (⟨⟩ I I I))) ∷
+  ("from (inc (Can (to 7))) = " ++ ((show ∘ from ∘ fromCan ∘ inc-can-short) (to-can 7))) ∷
+  []
 
 main = run {0ℓ} ((putStrLn ∘ foldl (_++_) "" ∘ intersperse "\n") outputs)
