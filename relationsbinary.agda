@@ -1,10 +1,16 @@
 module relationsbinary where
 
-open import Function using (_∘_)
-open import Data.String.Base hiding (concat; intersperse; show)
+import Relation.Binary.PropositionalEquality as Eq
+open Eq using (_≡_; refl; cong; sym)
+open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; step-≡; _∎)
+
+open import Function using (_∘_; _∋_)
+open import Data.String.Base using (String; _++_)
 open import Data.List using (List; _∷_; []; intersperse; foldl)
-open import Data.Nat
+open import Data.Nat using (ℕ; zero; _+_; _*_; _≤_; suc; s≤s; z≤n)
+open import Data.Nat.Properties using (+-comm)
 open import Data.Nat.Show using (show)
+open import Data.Empty using (⊥)
 
 open import IO using (run; putStrLn)
 open import Level using (0ℓ)
@@ -32,8 +38,6 @@ data One : Bin → Set where
 data Can : Bin → Set where
   ⟨O⟩ : Can (⟨⟩ O)
   C : ∀ {b : Bin} → One b → Can b
-
-open import Data.Empty
 
 -- for some reason these absurd patterns must be named to work properly.
 -- courtesy of ncf from irc.libera.net/#agda's ncf
