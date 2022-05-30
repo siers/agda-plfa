@@ -101,6 +101,61 @@ from ⟨⟩ = zero
 from (b O) = 2 * (from b)
 from (b I) = 1 + 2 * (from b)
 
+_ : from (⟨⟩ I I) ≡ 3
+_ = refl
+
+_ : to (from (⟨⟩ I I)) ≡ ⟨⟩ I I
+_ = refl
+
+_ : to (2 * (from (⟨⟩ I))) ≡ ⟨⟩ I O
+_ = refl
+
+_ : to (2 * (from (⟨⟩ I))) ≡ ⟨⟩ I O
+_ = begin
+  to (2 * (from (⟨⟩ I))) ≡⟨⟩
+  ⟨⟩ I O
+  ∎
+
+pr : ∀ (n : ℕ) → (Bin ∋ ((to (suc n)) O)) ≡ ((to (suc n)) O)
+pr n = refl
+
+p : ∀ (n : ℕ) → (Bin ∋ ((to (suc n)) O)) ≡ ((inc (to n)) O)
+p n =
+  begin
+  (to (suc n)) O ≡⟨⟩
+  (inc (to n)) O
+  ∎
+
+_bO : Bin → Bin
+b bO = b O
+
+_bI : Bin → Bin
+b bI = b I
+
++-suc-rev : ∀ n → suc (n + n) ≡ n + suc n
++-suc-rev n rewrite +-comm (suc n) n = refl
+
+to-sucsuc : ∀ (n : ℕ) → to (suc (suc (n + n))) ≡ to ((suc n) + (suc n))
+to-sucsuc n = begin
+  to (suc (suc (n + n))) ≡⟨⟩
+  to (suc (suc (n + n))) ≡⟨ cong to (cong suc (+-suc-rev n)) ⟩
+  to (suc (n + (suc n))) ≡⟨⟩
+  to ((suc n) + (suc n))
+  ∎
+
+to-×2 : ∀ (n : ℕ) → 1 ≤ n → to (n + n) ≡ ((to n) bO)
+to-×2 1 1≤1 = refl
+to-×2 (suc n@(suc m)) 1≤sucn =
+  begin
+  to ((suc n) + (suc n)) ≡⟨ sym (to-sucsuc n) ⟩
+  to (suc (suc (n + n))) ≡⟨⟩
+  inc (inc (to (n + n))) ≡⟨ cong inc (cong inc (to-×2 n (s≤s (z≤n {m})))) ⟩
+  inc (inc ((to n) bO)) ≡⟨⟩
+  inc ((to n) bI) ≡⟨⟩
+  (inc (to n)) bO ≡⟨⟩
+  ((to (suc n)) bO)
+  ∎
+
 outputs : List String
 outputs =
   (". + 1 = " ++ ((binToStr ∘ inc) ⟨⟩)) ∷
