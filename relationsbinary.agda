@@ -1,14 +1,14 @@
 module relationsbinary where
 
 import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; refl; cong; sym)
+open Eq using (_≡_; refl; cong; sym; trans)
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; step-≡; _∎)
 
 open import Function using (_∘_; _∋_)
 open import Data.String.Base using (String; _++_)
 open import Data.List using (List; _∷_; []; intersperse; foldl)
-open import Data.Nat using (ℕ; zero; _+_; _*_; _≤_; suc; s≤s; z≤n)
-open import Data.Nat.Properties using (+-comm)
+open import Data.Nat using (ℕ; zero; _+_; _*_; _≤_; suc; s≤s; z≤n; ≢-nonZero; _<_)
+open import Data.Nat.Properties using (+-assoc; +-comm; m≤n*m; ≤-trans; ≤-step)
 open import Data.Nat.Show using (show)
 open import Data.Empty using (⊥)
 
@@ -85,9 +85,6 @@ inc-can-short : ∀ {b : Bin} → Can b → Can (inc b)
 inc-can-short {⟨⟩ O} ⟨0⟩ = C ⟨I⟩
 inc-can-short {b} (C o) = C (inc-one o)
 
-fromCan : ∀ {b : Bin} → Can b → Bin
-fromCan {b} _ = b
-
 to : ∀ (n : ℕ) → Bin
 to zero = ⟨⟩ O
 to (suc n) = inc (to n)
@@ -100,6 +97,9 @@ from : ∀ (b : Bin) → ℕ
 from ⟨⟩ = zero
 from (b O) = 2 * (from b)
 from (b I) = 1 + 2 * (from b)
+
+fromCan : ∀ {b : Bin} → Can b → Bin
+fromCan {b} _ = b
 
 _ : from (⟨⟩ I I) ≡ 3
 _ = refl
@@ -143,18 +143,69 @@ to-sucsuc n = begin
   to ((suc n) + (suc n))
   ∎
 
-to-×2 : ∀ (n : ℕ) → 1 ≤ n → to (n + n) ≡ ((to n) bO)
+-- should this really be this difficult?
+×2 : ∀ (n : ℕ) → 2 * n ≡ n + n
+×2 n = begin
+  2 * n ≡⟨ sym (+-assoc n n zero) ⟩
+  (n + n) + zero ≡⟨ +-comm (n + n) zero ⟩
+  n + n
+  ∎
+
+times : ∀ (n : ℕ) → 1 * n ≡ n
+times n = +-comm n zero
+
+-- "2 * n = n + n" should not have been baked into this proof, but shoehorned it in anyway
+-- to-×2 : ∀ (n : ℕ) → 1 ≤ n → to (n + n) ≡ ((to n) bO)
+to-×2 : ∀ (n : ℕ) → 1 ≤ n → to (2 * n) ≡ ((to n) bO)
 to-×2 1 1≤1 = refl
 to-×2 (suc n@(suc m)) 1≤sucn =
   begin
+  to (2 * (suc n)) ≡⟨ cong to (×2 (suc n)) ⟩
   to ((suc n) + (suc n)) ≡⟨ sym (to-sucsuc n) ⟩
   to (suc (suc (n + n))) ≡⟨⟩
-  inc (inc (to (n + n))) ≡⟨ cong inc (cong inc (to-×2 n (s≤s (z≤n {m})))) ⟩
+  inc (inc (to (n + n))) ≡⟨ cong inc (cong inc (trans (cong to (sym (×2 n))) (to-×2 n (s≤s (z≤n {m}))))) ⟩
   inc (inc ((to n) bO)) ≡⟨⟩
   inc ((to n) bI) ≡⟨⟩
   (inc (to n)) bO ≡⟨⟩
   ((to (suc n)) bO)
   ∎
+
+mt : ∀ n → n ≤ 3 * n
+mt n = m≤n*m n (s≤s (z≤n {2}))
+
+one≤from : ∀ {b : Bin} → One b → 1 ≤ from b
+one≤from {⟨⟩ I} ⟨I⟩ = s≤s z≤n
+one≤from {b O} (o O) = ≤-trans (one≤from o) (m≤n*m (from b) (s≤s (z≤n {1})))
+one≤from {b I} (o I) = ≤-trans (one≤from o) (≤-step (m≤n*m (from b) (s≤s (z≤n {1}))))
+-- todo refactor ↑
+
+-- refactor cong cong, add trans
+≡-to-from : ∀ {b : Bin} → Can b → to (from b) ≡ b
+≡-to-from (⟨O⟩) = refl
+≡-to-from (C ⟨I⟩) = refl
+≡-to-from {b O} (C (o O)) = begin
+  to (from (b O)) ≡⟨⟩
+  to (2 * (from b)) ≡⟨ to-×2 (from b) (one≤from o) ⟩
+  (to (from b)) O ≡⟨ cong (_O) (≡-to-from (C o)) ⟩
+  b O
+  ∎
+≡-to-from {b I} (C (o I)) = begin
+  to (from (b I)) ≡⟨⟩
+  to (1 + 2 * (from b)) ≡⟨⟩
+  inc (to (2 * (from b))) ≡⟨⟩
+  inc (to (from (b O))) ≡⟨ cong inc (again (C (o O))) ⟩
+  -- inc (to (from (b O))) ≡⟨ cong inc (≡-to-from (C (o O))) ⟩ -- because of this
+  inc (b O) ≡⟨⟩
+  b I
+  ∎
+  where
+    again : Can (b O) → to (from (b O)) ≡ b O -- literal copypasta, because ↑
+    again (C (o O)) = begin
+      to (from (b O)) ≡⟨⟩
+      to (2 * (from b)) ≡⟨ to-×2 (from b) (one≤from o) ⟩
+      (to (from b)) O ≡⟨ cong (_O) (≡-to-from (C o)) ⟩
+      b O
+      ∎
 
 outputs : List String
 outputs =
