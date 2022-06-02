@@ -8,7 +8,7 @@ open import Function using (_∘_; _∋_)
 open import Data.String.Base using (String; _++_)
 open import Data.List using (List; _∷_; []; intersperse; foldl)
 open import Data.Nat using (ℕ; zero; _+_; _*_; _≤_; suc; s≤s; z≤n; ≢-nonZero; _<_)
-open import Data.Nat.Properties using (+-assoc; +-comm; m≤n*m; ≤-trans; ≤-step)
+open import Data.Nat.Properties using (+-suc; +-assoc; +-comm; m≤n*m; ≤-trans; ≤-step)
 open import Data.Nat.Show using (show)
 open import Data.Empty using (⊥)
 
@@ -101,85 +101,31 @@ from (b I) = 1 + 2 * (from b)
 fromCan : ∀ {b : Bin} → Can b → Bin
 fromCan {b} _ = b
 
-_ : from (⟨⟩ I I) ≡ 3
-_ = refl
-
-_ : to (from (⟨⟩ I I)) ≡ ⟨⟩ I I
-_ = refl
-
 _ : to (2 * (from (⟨⟩ I))) ≡ ⟨⟩ I O
 _ = refl
-
-_ : to (2 * (from (⟨⟩ I))) ≡ ⟨⟩ I O
-_ = begin
-  to (2 * (from (⟨⟩ I))) ≡⟨⟩
-  ⟨⟩ I O
-  ∎
-
-pr : ∀ (n : ℕ) → (Bin ∋ ((to (suc n)) O)) ≡ ((to (suc n)) O)
-pr n = refl
-
-p : ∀ (n : ℕ) → (Bin ∋ ((to (suc n)) O)) ≡ ((inc (to n)) O)
-p n =
-  begin
-  (to (suc n)) O ≡⟨⟩
-  (inc (to n)) O
-  ∎
-
-_bO : Bin → Bin
-b bO = b O
-
-_bI : Bin → Bin
-b bI = b I
-
-+-suc-rev : ∀ n → suc (n + n) ≡ n + suc n
-+-suc-rev n rewrite +-comm (suc n) n = refl
-
-to-sucsuc : ∀ (n : ℕ) → to (suc (suc (n + n))) ≡ to ((suc n) + (suc n))
-to-sucsuc n = begin
-  to (suc (suc (n + n))) ≡⟨⟩
-  to (suc (suc (n + n))) ≡⟨ cong to (cong suc (+-suc-rev n)) ⟩
-  to (suc (n + (suc n))) ≡⟨⟩
-  to ((suc n) + (suc n))
-  ∎
-
--- should this really be this difficult?
-×2 : ∀ (n : ℕ) → 2 * n ≡ n + n
-×2 n = begin
-  2 * n ≡⟨ sym (+-assoc n n zero) ⟩
-  (n + n) + zero ≡⟨ +-comm (n + n) zero ⟩
-  n + n
-  ∎
-
-times : ∀ (n : ℕ) → 1 * n ≡ n
-times n = +-comm n zero
 
 -- "2 * n = n + n" should not have been baked into this proof, but shoehorned it in anyway
--- to-×2 : ∀ (n : ℕ) → 1 ≤ n → to (n + n) ≡ ((to n) bO)
-to-×2 : ∀ (n : ℕ) → 1 ≤ n → to (2 * n) ≡ ((to n) bO)
+-- to-×2 : ∀ (n : ℕ) → 1 ≤ n → to (n + n) ≡ Bin ∋ ((to n) O)
+to-×2 : ∀ (n : ℕ) → 1 ≤ n → to (2 * n) ≡ (Bin ∋ ((to n) O))
 to-×2 1 1≤1 = refl
 to-×2 (suc n@(suc m)) 1≤sucn =
   begin
   to (2 * (suc n)) ≡⟨ cong to (×2 (suc n)) ⟩
-  to ((suc n) + (suc n)) ≡⟨ sym (to-sucsuc n) ⟩
-  to (suc (suc (n + n))) ≡⟨⟩
-  inc (inc (to (n + n))) ≡⟨ cong inc (cong inc (trans (cong to (sym (×2 n))) (to-×2 n (s≤s (z≤n {m}))))) ⟩
-  inc (inc ((to n) bO)) ≡⟨⟩
-  inc ((to n) bI) ≡⟨⟩
-  (inc (to n)) bO ≡⟨⟩
-  ((to (suc n)) bO)
+  to ((suc n) + (suc n)) ≡⟨ cong to (+-suc (suc n) n) ⟩
+  inc (inc (to (n + n))) ≡⟨ cong (inc ∘ inc) (trans (cong to (sym (×2 n))) (to-×2 n (s≤s (z≤n {m})))) ⟩
+  inc (inc ((to n) O)) ≡⟨⟩
+  ((to (suc n)) O)
   ∎
-
-mt : ∀ n → n ≤ 3 * n
-mt n = m≤n*m n (s≤s (z≤n {2}))
+  where
+    -- should this really be this difficult? also, it's code golfed
+    ×2 : ∀ (n : ℕ) → 2 * n ≡ n + n
+    ×2 n = trans (sym (+-assoc n n zero)) (+-comm (n + n) zero)
 
 one≤from : ∀ {b : Bin} → One b → 1 ≤ from b
 one≤from {⟨⟩ I} ⟨I⟩ = s≤s z≤n
 one≤from {b O} (o O) = ≤-trans (one≤from o) (m≤n*m (from b) (s≤s (z≤n {1})))
-one≤from {b I} (o I) = ≤-trans (one≤from o) (≤-step (m≤n*m (from b) (s≤s (z≤n {1}))))
--- todo refactor ↑
+one≤from {b I} (o I) = ≤-step (≤-trans (one≤from o) (m≤n*m (from b) (s≤s (z≤n {1}))))
 
--- refactor cong cong, add trans
 ≡-to-from : ∀ {b : Bin} → Can b → to (from b) ≡ b
 ≡-to-from (⟨O⟩) = refl
 ≡-to-from (C ⟨I⟩) = refl
@@ -191,7 +137,6 @@ one≤from {b I} (o I) = ≤-trans (one≤from o) (≤-step (m≤n*m (from b) (s
   ∎
 ≡-to-from {b I} (C (o I)) = begin
   to (from (b I)) ≡⟨⟩
-  to (1 + 2 * (from b)) ≡⟨⟩
   inc (to (2 * (from b))) ≡⟨⟩
   inc (to (from (b O))) ≡⟨ cong inc (again (C (o O))) ⟩
   -- inc (to (from (b O))) ≡⟨ cong inc (≡-to-from (C (o O))) ⟩ -- because of this
