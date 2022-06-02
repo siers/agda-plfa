@@ -121,36 +121,30 @@ to-×2 (suc n@(suc m)) 1≤sucn =
     ×2 : ∀ (n : ℕ) → 2 * n ≡ n + n
     ×2 n = trans (sym (+-assoc n n zero)) (+-comm (n + n) zero)
 
-one≤from : ∀ {b : Bin} → One b → 1 ≤ from b
+one≤from : ∀ {b} → One b → 1 ≤ from b
 one≤from {⟨⟩ I} ⟨I⟩ = s≤s z≤n
 one≤from {b O} (o O) = ≤-trans (one≤from o) (m≤n*m (from b) (s≤s (z≤n {1})))
 one≤from {b I} (o I) = ≤-step (≤-trans (one≤from o) (m≤n*m (from b) (s≤s (z≤n {1}))))
 
-≡-to-from : ∀ {b : Bin} → Can b → to (from b) ≡ b
-≡-to-from (⟨O⟩) = refl
-≡-to-from (C ⟨I⟩) = refl
-≡-to-from {b O} (C (o O)) = begin
+≡-to-from-bO : ∀ {b} → Can (b O) → to (from b) ≡ b → to (from (b O)) ≡ b O -- literal copypasta, because ↑
+≡-to-from-bO {b} (C (o O)) step = begin
   to (from (b O)) ≡⟨⟩
   to (2 * (from b)) ≡⟨ to-×2 (from b) (one≤from o) ⟩
-  (to (from b)) O ≡⟨ cong (_O) (≡-to-from (C o)) ⟩
+  (to (from b)) O ≡⟨ cong (_O) step ⟩
   b O
   ∎
+
+≡-to-from : ∀ {b} → Can b → to (from b) ≡ b
+≡-to-from (⟨O⟩) = refl
+≡-to-from (C ⟨I⟩) = refl
+≡-to-from {b O} c@(C (o O)) = ≡-to-from-bO c (≡-to-from (C o))
 ≡-to-from {b I} (C (o I)) = begin
   to (from (b I)) ≡⟨⟩
   inc (to (2 * (from b))) ≡⟨⟩
-  inc (to (from (b O))) ≡⟨ cong inc (again (C (o O))) ⟩
-  -- inc (to (from (b O))) ≡⟨ cong inc (≡-to-from (C (o O))) ⟩ -- because of this
+  inc (to (from (b O))) ≡⟨ cong inc (≡-to-from-bO (C (o O)) (≡-to-from (C o))) ⟩
   inc (b O) ≡⟨⟩
   b I
   ∎
-  where
-    again : Can (b O) → to (from (b O)) ≡ b O -- literal copypasta, because ↑
-    again (C (o O)) = begin
-      to (from (b O)) ≡⟨⟩
-      to (2 * (from b)) ≡⟨ to-×2 (from b) (one≤from o) ⟩
-      (to (from b)) O ≡⟨ cong (_O) (≡-to-from (C o)) ⟩
-      b O
-      ∎
 
 outputs : List String
 outputs =
@@ -160,6 +154,7 @@ outputs =
   ("5 + 1 = " ++ ((binToStr ∘ inc) (⟨⟩ I O I))) ∷
   ("7 + 1 = " ++ ((binToStr ∘ inc) (⟨⟩ I I I))) ∷
   ("from (inc (Can (to 7))) = " ++ ((show ∘ from ∘ fromCan ∘ inc-can-short) (to-can 7))) ∷
+  ("(show ∘ from ∘ to) 1000 = " ++ ((show ∘ from ∘ to) 1000)) ∷
   []
 
 main = run {0ℓ} ((putStrLn ∘ foldl (_++_) "" ∘ intersperse "\n") outputs)
