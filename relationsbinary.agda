@@ -126,7 +126,7 @@ one≤from {⟨⟩ I} ⟨I⟩ = s≤s z≤n
 one≤from {b O} (o O) = ≤-trans (one≤from o) (m≤n*m (from b) (s≤s (z≤n {1})))
 one≤from {b I} (o I) = ≤-step (≤-trans (one≤from o) (m≤n*m (from b) (s≤s (z≤n {1}))))
 
-≡-to-from-bO : ∀ {b} → Can (b O) → to (from b) ≡ b → to (from (b O)) ≡ b O -- literal copypasta, because ↑
+≡-to-from-bO : ∀ {b} → Can (b O) → to (from b) ≡ b → to (from (b O)) ≡ b O
 ≡-to-from-bO {b} (C (o O)) step = begin
   to (from (b O)) ≡⟨⟩
   to (2 * (from b)) ≡⟨ to-×2 (from b) (one≤from o) ⟩
