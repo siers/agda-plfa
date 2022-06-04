@@ -8,7 +8,7 @@ open import Function using (_∘_; _∋_)
 open import Data.String.Base using (String; _++_)
 open import Data.List using (List; _∷_; []; intersperse; foldl)
 open import Data.Nat using (ℕ; zero; _+_; _*_; _≤_; suc; s≤s; z≤n; ≢-nonZero; _<_)
-open import Data.Nat.Properties using (+-suc; +-assoc; +-comm; m≤n*m; ≤-trans; ≤-step)
+open import Data.Nat.Properties using (+-identityʳ; +-suc; +-assoc; +-comm; m≤n*m; ≤-trans; ≤-step)
 open import Data.Nat.Show using (show)
 open import Data.Empty using (⊥)
 
@@ -114,12 +114,12 @@ to-×2 (suc n@(suc m)) 1≤sucn =
   to ((suc n) + (suc n)) ≡⟨ cong to (+-suc (suc n) n) ⟩
   inc (inc (to (n + n))) ≡⟨ cong (inc ∘ inc) (trans (cong to (sym (×2 n))) (to-×2 n (s≤s (z≤n {m})))) ⟩
   inc (inc ((to n) O)) ≡⟨⟩
-  ((to (suc n)) O)
-  ∎
+  ((to (suc n)) O) ∎
   where
-    -- should this really be this difficult? also, it's code golfed
     ×2 : ∀ (n : ℕ) → 2 * n ≡ n + n
-    ×2 n = trans (sym (+-assoc n n zero)) (+-comm (n + n) zero)
+    ×2 n = cong (n +_) (+-identityʳ n)
+    -- should this really be this difficult? also, it's code golfed
+    -- ×2 n = trans (sym (+-assoc n n zero)) (+-comm (n + n) zero)
 
 one≤from : ∀ {b} → One b → 1 ≤ from b
 one≤from {⟨⟩ I} ⟨I⟩ = s≤s z≤n
@@ -131,8 +131,7 @@ one≤from {b I} (o I) = ≤-step (≤-trans (one≤from o) (m≤n*m (from b) (s
   to (from (b O)) ≡⟨⟩
   to (2 * (from b)) ≡⟨ to-×2 (from b) (one≤from o) ⟩
   (to (from b)) O ≡⟨ cong (_O) step ⟩
-  b O
-  ∎
+  b O ∎
 
 ≡-to-from : ∀ {b} → Can b → to (from b) ≡ b
 ≡-to-from (⟨O⟩) = refl
@@ -143,8 +142,7 @@ one≤from {b I} (o I) = ≤-step (≤-trans (one≤from o) (m≤n*m (from b) (s
   inc (to (2 * (from b))) ≡⟨⟩
   inc (to (from (b O))) ≡⟨ cong inc (≡-to-from-bO (C (o O)) (≡-to-from (C o))) ⟩
   inc (b O) ≡⟨⟩
-  b I
-  ∎
+  b I ∎
 
 outputs : List String
 outputs =
