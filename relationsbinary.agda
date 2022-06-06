@@ -39,6 +39,9 @@ data Can : Bin → Set where
   ⟨O⟩ : Can (⟨⟩ O)
   C : ∀ {b : Bin} → One b → Can b
 
+can-to-bin : ∀ {b} → Can b → Bin
+can-to-bin {b} _ = b
+
 -- for some reason these absurd patterns must be named to work properly.
 -- courtesy of ncf from irc.libera.net/#agda's ncf
 can't : Can ⟨⟩ → ⊥
@@ -81,9 +84,9 @@ inc-one ⟨I⟩ = (⟨I⟩ O)
 inc-one (o O) = (o I)
 inc-one (o I) = (inc-one o) O
 
-inc-can-short : ∀ {b : Bin} → Can b → Can (inc b)
-inc-can-short {⟨⟩ O} ⟨0⟩ = C ⟨I⟩
-inc-can-short {b} (C o) = C (inc-one o)
+inc-can : ∀ {b : Bin} → Can b → Can (inc b)
+inc-can {⟨⟩ O} ⟨0⟩ = C ⟨I⟩
+inc-can {b} (C o) = C (inc-one o)
 
 to : ∀ (n : ℕ) → Bin
 to zero = ⟨⟩ O
@@ -91,15 +94,19 @@ to (suc n) = inc (to n)
 
 to-can : ∀ (n : ℕ) → Can (to n)
 to-can zero = ⟨O⟩
-to-can (suc n) = inc-can-short (to-can n)
+to-can (suc n) = inc-can (to-can n)
 
 from : ∀ (b : Bin) → ℕ
 from ⟨⟩ = zero
 from (b O) = 2 * (from b)
 from (b I) = 1 + 2 * (from b)
 
-fromCan : ∀ {b : Bin} → Can b → Bin
-fromCan {b} _ = b
+from-can : ∀ {b : Bin} → Can b → ℕ
+from-can {b} _ = from b
+
+postulate inc-suc-commutes : ∀ {b} {c : Can b} → from-can (inc-can c) ≡ suc (from-can c)
+-- inc-suc-commutes {_} {⟨0⟩} = refl
+-- inc-suc-commutes (suc n) =
 
 _ : to (2 * (from (⟨⟩ I))) ≡ ⟨⟩ I O
 _ = refl
@@ -144,6 +151,15 @@ one≤from {b I} (o I) = ≤-step (≤-trans (one≤from o) (m≤n*m (from b) (s
   inc (b O) ≡⟨⟩
   b I ∎
 
+-- TODO: refactor ≡-to-from to to-can/inc-can
+≡-from-to : ∀ {n} → from-can (to-can n) ≡ n
+≡-from-to {zero} = refl
+≡-from-to {suc n} = begin
+  from-can (to-can (suc n)) ≡⟨⟩
+  from-can (inc-can (to-can n)) ≡⟨ inc-suc-commutes {_} {to-can n} ⟩
+  suc (from-can (to-can n)) ≡⟨ cong suc (≡-from-to {n}) ⟩
+  suc n ∎
+
 outputs : List String
 outputs =
   (". + 1 = " ++ ((binToStr ∘ inc) ⟨⟩)) ∷
@@ -151,7 +167,7 @@ outputs =
   ("1 + 1 = " ++ ((binToStr ∘ inc) (⟨⟩ I))) ∷
   ("5 + 1 = " ++ ((binToStr ∘ inc) (⟨⟩ I O I))) ∷
   ("7 + 1 = " ++ ((binToStr ∘ inc) (⟨⟩ I I I))) ∷
-  ("from (inc (Can (to 7))) = " ++ ((show ∘ from ∘ fromCan ∘ inc-can-short) (to-can 7))) ∷
+  ("from (inc (Can (to 7))) = " ++ ((show ∘ from ∘ can-to-bin ∘ inc-can) (to-can 7))) ∷
   ("(show ∘ from ∘ to) 1000 = " ++ ((show ∘ from ∘ to) 1000)) ∷
   []
 
