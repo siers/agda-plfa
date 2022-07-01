@@ -8,7 +8,7 @@ open import Function using (_∘_; _∋_)
 open import Data.String.Base using (String; _++_)
 open import Data.List using (List; _∷_; []; intersperse; foldl)
 open import Data.Nat using (ℕ; zero; _+_; _*_; _≤_; suc; s≤s; z≤n; ≢-nonZero; _<_)
-open import Data.Nat.Properties using (+-identityʳ; +-suc; +-assoc; +-comm; m≤n*m; ≤-trans; ≤-step)
+open import Data.Nat.Properties using (+-identityʳ; +-suc; +-assoc; +-comm; m≤n*m; ≤-trans; ≤-step; *-distribˡ-+)
 open import Data.Nat.Show using (show)
 open import Data.Empty using (⊥)
 
@@ -104,9 +104,25 @@ from (b I) = 1 + 2 * (from b)
 from-can : ∀ {b : Bin} → Can b → ℕ
 from-can {b} _ = from b
 
-postulate inc-suc-commutes : ∀ {b} {c : Can b} → from-can (inc-can c) ≡ suc (from-can c)
--- inc-suc-commutes {_} {⟨0⟩} = refl
--- inc-suc-commutes (suc n) =
+inc-suc-comm : ∀ {b} (c : Can b) → from-can (inc-can c) ≡ suc (from-can c)
+inc-suc-comm {⟨⟩} (C ())
+inc-suc-comm {⟨⟩ O} ⟨0⟩ = refl
+inc-suc-comm {⟨⟩ I} (C ⟨I⟩) = refl
+inc-suc-comm {b O} (C (o O)) = refl
+inc-suc-comm {b I} (C (o I)) = begin
+  from-can (inc-can (C (o I))) ≡⟨⟩
+  from-can (C ((inc-one o) O)) ≡⟨⟩
+  2 * from-can (C (inc-one o)) ≡⟨⟩
+  2 * from-can (inc-can (C o)) ≡⟨ cong (2 *_) (inc-suc-comm (C o)) ⟩
+  2 * (suc (from-can (C o))) ≡⟨⟩
+  2 * (1 + (from-can (C o))) ≡⟨ cong (2 *_) (+-comm 1 (from-can (C o))) ⟩
+  2 * ((from-can (C o)) + 1) ≡⟨ *-distribˡ-+ 2 (from-can (C o)) 1 ⟩
+  2 * from-can (C o) + 2 ≡⟨⟩
+  from-can (C (o O)) + 2 ≡⟨ +-comm (from-can (C (o O))) 2 ⟩
+  2 + from-can (C (o O)) ≡⟨⟩
+  1 + 1 + from-can (C (o O)) ≡⟨⟩
+  1 + from-can (C (o I)) ≡⟨⟩
+  suc (from-can (C (o I))) ∎
 
 _ : to (2 * (from (⟨⟩ I))) ≡ ⟨⟩ I O
 _ = refl
@@ -156,7 +172,7 @@ one≤from {b I} (o I) = ≤-step (≤-trans (one≤from o) (m≤n*m (from b) (s
 ≡-from-to {zero} = refl
 ≡-from-to {suc n} = begin
   from-can (to-can (suc n)) ≡⟨⟩
-  from-can (inc-can (to-can n)) ≡⟨ inc-suc-commutes {_} {to-can n} ⟩
+  from-can (inc-can (to-can n)) ≡⟨ inc-suc-comm (to-can n) ⟩
   suc (from-can (to-can n)) ≡⟨ cong suc (≡-from-to {n}) ⟩
   suc n ∎
 
