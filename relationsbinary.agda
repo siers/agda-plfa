@@ -4,6 +4,7 @@ import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; cong; sym; trans)
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; step-≡; _∎)
 
+open import Agda.Builtin.Sigma
 open import Function using (_∘_; _∋_)
 open import Data.String.Base using (String; _++_)
 open import Data.List using (List; _∷_; []; intersperse; foldl)
@@ -156,14 +157,14 @@ one≤from {b I} (o I) = ≤-step (≤-trans (one≤from o) (m≤n*m (from b) (s
   (to (from b)) O ≡⟨ cong (_O) step ⟩
   b O ∎
 
-≡-to-from : ∀ {b} → Can b → to (from b) ≡ b
-≡-to-from (⟨O⟩) = refl
-≡-to-from (C ⟨I⟩) = refl
-≡-to-from {b O} c@(C (o O)) = ≡-to-from-bO c (≡-to-from (C o))
-≡-to-from {b I} (C (o I)) = begin
+≡-to-from : ∀ (p : Σ Bin Can) → to (from (fst p)) ≡ (fst p)
+≡-to-from (_ , ⟨O⟩) = refl
+≡-to-from (_ , (C ⟨I⟩)) = refl
+≡-to-from (b O , c@(C (o O))) = ≡-to-from-bO c (≡-to-from (b , C o))
+≡-to-from (b I , (C (o I))) = begin
   to (from (b I)) ≡⟨⟩
   inc (to (2 * (from b))) ≡⟨⟩
-  inc (to (from (b O))) ≡⟨ cong inc (≡-to-from-bO (C (o O)) (≡-to-from (C o))) ⟩
+  inc (to (from (b O))) ≡⟨ cong inc (≡-to-from-bO (C (o O)) (≡-to-from (b , C o))) ⟩
   inc (b O) ≡⟨⟩
   b I ∎
 
