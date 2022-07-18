@@ -1,8 +1,9 @@
 module quantifiers where
 
 import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; refl)
-open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
+open Eq
+open import Data.Nat
+open import Data.Nat.Properties using (+-suc; +-comm; ≤-refl; suc-injective)
 open import Relation.Nullary using (¬_)
 open import Data.Product as P using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
 open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_]; [_,_]′; map)
@@ -44,5 +45,15 @@ syntax ∃-syntax (λ x → B) = ∃[ x ] B
     { to = λ{ ⟨ a , bc ⟩ → map ⟨ a ,_⟩ ⟨ a ,_⟩ bc}
     ; from = [ (λ{⟨ a , b ⟩ → ⟨ a , inj₁ b ⟩}) , (λ{⟨ a , c ⟩ → ⟨ a , inj₂ c ⟩}) ]
     ; from∘to = λ{ ⟨ a , (inj₁ b) ⟩ → refl ; ⟨ a , (inj₂ c) ⟩ → refl }
-    ; to∘from = λ{ (inj₁ ⟨ a , b ⟩) → refl ; (inj₁ ⟨ a , b ⟩) → refl }
+    ; to∘from = λ{ (inj₁ ⟨ a , b ⟩) → refl ; (inj₂ ⟨ a , c ⟩) → refl }
     }
+
++-≤-∃ : ∀ {y z} → y ≤ z → ∃[ x ] (x + y ≡ z)
++-≤-∃ {zero} {n} _ = ⟨ n , +-comm n zero ⟩
++-≤-∃ {suc y} {suc z} (s≤s y≤z) with +-≤-∃ {y} {z} y≤z
+... | ⟨ x , eq ⟩ = ⟨ x , trans (+-suc x y) (cong suc eq) ⟩
+
+∃-+-≤ : ∀ {y z} → ∃[ x ] (x + y ≡ z) → y ≤ z
+∃-+-≤ {zero} {suc z} _ = z≤n
+∃-+-≤ {y} {z} ⟨ zero , refl ⟩ = ≤-refl {y}
+∃-+-≤ {suc y} {suc z} ⟨ x , eq ⟩ = s≤s (∃-+-≤ {y} {z} ⟨ x , suc-injective (trans (sym (+-suc x y)) eq) ⟩)
