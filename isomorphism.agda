@@ -226,3 +226,8 @@ module ≲-Reasoning where
     → A ≲ A
   A ≲-∎ = ≲-refl
 open ≲-Reasoning
+
+record _⇔_ (A B : Set) : Set where
+  field
+    to   : A → B
+    from : B → A

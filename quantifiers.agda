@@ -8,7 +8,7 @@ open import Relation.Nullary using (¬_)
 open import Data.Product as P using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
 open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_]; [_,_]′; map)
 open import Function.Base using (id; _∘_; _∋_)
-open import isomorphism using (_≃_; extensionality)
+open import isomorphism using (_≃_; extensionality; _⇔_)
 
 ∀-distrib-× : ∀ {A : Set} {B C : A → Set} → (∀ (a : A) → B a × C a) ≃ (∀ (a : A) → B a) × (∀ (a : A) → C a)
 ∀-distrib-× =
@@ -57,3 +57,6 @@ syntax ∃-syntax (λ x → B) = ∃[ x ] B
 ∃-+-≤ {zero} {suc z} _ = z≤n
 ∃-+-≤ {y} {z} ⟨ zero , refl ⟩ = ≤-refl {y}
 ∃-+-≤ {suc y} {suc z} ⟨ x , eq ⟩ = s≤s (∃-+-≤ {y} {z} ⟨ x , suc-injective (trans (sym (+-suc x y)) eq) ⟩)
+
+⇔-∃-≤ : ∀ {y z} → (∃[ x ] (x + y ≡ z)) ⇔ (y ≤ z)
+⇔-∃-≤ = record { to = ∃-+-≤ ; from = +-≤-∃ }
