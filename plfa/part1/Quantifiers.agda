@@ -1,4 +1,4 @@
-module quantifiers where
+module plfa.part1.Quantifiers where
 
 import Relation.Binary.PropositionalEquality as Eq
 open Eq
@@ -8,7 +8,7 @@ open import Relation.Nullary using (¬_)
 open import Data.Product as P using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
 open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_]; [_,_]′; map)
 open import Function.Base using (id; _∘_; _∋_)
-open import isomorphism using (_≃_; extensionality; _⇔_)
+open import plfa.part1.Isomorphism using (_≃_; extensionality; _⇔_)
 
 ∀-distrib-× : ∀ {A : Set} {B C : A → Set} → (∀ (a : A) → B a × C a) ≃ (∀ (a : A) → B a) × (∀ (a : A) → C a)
 ∀-distrib-× =

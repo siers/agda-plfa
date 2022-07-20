@@ -1,6 +1,6 @@
 -- THIS IS JUST COPYPASTA FROM PLFA USED FOR THE DEFINITIONS
 
-module isomorphism where
+module plfa.part1.Isomorphism where
 
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; cong; cong-app)

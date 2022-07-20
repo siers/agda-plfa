@@ -1,4 +1,4 @@
-module relations where
+module plfa.part1.Relations where
 
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; _≢_; refl; cong)

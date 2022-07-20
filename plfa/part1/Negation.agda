@@ -1,4 +1,4 @@
-module negation where
+module plfa.part1.Negation where
 
 open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Nat.Properties using (suc-injective; ≤-pred)
@@ -11,7 +11,7 @@ open import Relation.Binary.PropositionalEquality as Eq using (_≡_; refl; cong
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; step-≡; _∎)
 open import Relation.Nullary using (¬_)
 
-open import isomorphism using (_≃_; extensionality)
+open import plfa.part1.Isomorphism using (_≃_; extensionality)
 
 <-irreflexive : ∀ n → ¬ (n < n)
 <-irreflexive (suc m) (s≤s m≤m) = <-irreflexive m m≤m

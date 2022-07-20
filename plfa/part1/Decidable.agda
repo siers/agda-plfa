@@ -1,4 +1,4 @@
-module decidable where
+module plfa.part1.Decidable where
 
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; cong)
@@ -12,8 +12,8 @@ open import Relation.Nullary.Negation using ()
   renaming (contradiction to ¬¬-intro)
 open import Data.Unit using (⊤; tt)
 open import Data.Empty using (⊥; ⊥-elim)
-open import relations using (_<_; z<s; s<s)
-open import isomorphism using (_⇔_)
+open import plfa.part1.Relations using (_<_; z<s; s<s)
+open import plfa.part1.Isomorphism using (_⇔_)
 
 infix 4 _≤_
 
@@ -98,7 +98,7 @@ zero ≡ℕ? suc n = no λ()
 -- good, this works
 _≤?′_ : ∀ (m n : ℕ) → Dec (m ≤ n)
 m ≤?′ n with m ≤ᵇ n | ≤ᵇ→≤ m n | ≤→≤ᵇ {m} {n}
-...        | true   | p        | _            = ? --  yes (p tt)
+...        | true   | p        | _            = yes (p tt)
 ...        | false  | _        | ¬p           = no ¬p
 
 -- bad, this won't work
@@ -192,5 +192,5 @@ no ¬a ⇔-dec no ¬b = yes record { to = λ a → ⊥-elim (¬a a) ; from = λ 
 iff-⇔ : ∀ {A B : Set} (x : Dec A) (y : Dec B) → ⌊ x ⌋ iff ⌊ y ⌋ ≡ ⌊ x ⇔-dec y ⌋
 iff-⇔ (yes _) (yes _) = refl
 iff-⇔ (yes _) (no _) = refl
-iff-⇔ (yes _) (no _) = refl
+iff-⇔ (no _) (yes _) = refl
 iff-⇔ (no _) (no _) = refl

@@ -1,4 +1,4 @@
-module peano where
+module plfa.part1.Peano where
 
 -- https://plfa.github.io/Induction/
 

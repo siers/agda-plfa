@@ -2,3 +2,7 @@
 !.gitignore
 !*.agda
 !README.md
+
+# # this works, but the executables have non-matchable filenames
+# MAlonzo
+# *.agdai
