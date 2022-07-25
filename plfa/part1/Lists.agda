@@ -3,6 +3,7 @@ module plfa.part1.Lists where
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; sym; trans; cong)
 open Eq.≡-Reasoning
+open import Data.Empty
 open import Data.Bool using (Bool; true; false; T; _∧_; _∨_; not)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _≤_; s≤s; z≤n)
@@ -165,7 +166,7 @@ Any-++-⇔ xs ys = record { to = to xs ys ; from = from xs ys }
   from (x ∷ xs) ys (inj₁ (there ax)) = there (from xs ys (inj₁ ax))
   from (x ∷ xs) ys (inj₂ ay) = there (from xs ys (inj₂ ay))
 
--- mine (stretch)
+-- mine (stretch, but easy)
 All-++-≃ : ∀ {A : Set} {P : A → Set} (xs ys : List A) → All P (xs ++ ys) ≃ (All P xs × All P ys)
 All-++-≃ xs ys = record { to = to xs ys ; from = from xs ys ; from∘to = from∘to xs ys ; to∘from = to∘from xs ys }
   where
@@ -188,3 +189,38 @@ All-++-≃ xs ys = record { to = to xs ys ; from = from xs ys ; from∘to = from
   to∘from [] [] ⟨ [] , [] ⟩ = refl
   to∘from [] (y ∷ ys) ⟨ [] , py ∷ pys ⟩ = refl
   to∘from (x ∷ xs) ys (⟨ px ∷ pxs , pys ⟩) = cong (map₁ (px ∷_)) (to∘from xs ys ⟨ pxs , pys ⟩)
+
+Decidable : ∀ {A : Set} → (A → Set) → Set
+Decidable {A} P  =  ∀ (x : A) → Dec (P x)
+
+All? : ∀ {A : Set} {P : A → Set} → Decidable P → Decidable (All P)
+All? P? []                                 =  yes []
+All? P? (x ∷ xs) with P? x   | All? P? xs
+...                 | yes Px | yes Pxs     =  yes (Px ∷ Pxs)
+...                 | no ¬Px | _           =  no λ{ (Px ∷ Pxs) → ¬Px Px   }
+...                 | _      | no ¬Pxs     =  no λ{ (Px ∷ Pxs) → ¬Pxs Pxs }
+
+-- unneeded lemma
+Any→∃P : ∀ {A : Set} {xs : List A} → (P : A → Set) → Any P xs → ∃[ x ] P x
+Any→∃P P (here {x} Px) = ⟨ x , Px ⟩
+Any→∃P P (there Pxs) = Any→∃P P Pxs
+
+-- mine (stretch, but really easy)
+Any? : ∀ {A : Set} {P : A → Set} → Decidable P → Decidable (Any P)
+Any? P? []                                 = no λ()
+Any? {_} {P} P? (x ∷ xs) with P? x | Any? P? xs
+... | yes Px | _       = yes (here Px)
+... | no ¬Px | yes Px  = yes (there Px)
+... | no ¬Px | no ¬Pxs = no (λ { (here Px) → ¬Px Px ; (there Pxs) → ¬Pxs Pxs })
+
+data merge {A : Set} : (xs ys zs : List A) → Set where
+  [] : merge [] [] []
+  left-∷  : ∀ {x xs ys zs} → merge xs ys zs → merge (x ∷ xs) ys (x ∷ zs)
+  right-∷ : ∀ {y xs ys zs} → merge xs ys zs → merge xs (y ∷ ys) (y ∷ zs)
+
+-- mine (stretch, but simple, if you know the definitions right)
+split : ∀ {A : Set} {P : A → Set} (P? : Decidable P) (zs : List A) → ∃[ xs ] ∃[ ys ] ( merge xs ys zs × (All P xs × All (¬_ ∘ P) ys) )
+split {A} {p} P? [] = ⟨ [] , ⟨ [] , (⟨ [] , ⟨ [] , [] ⟩ ⟩) ⟩ ⟩
+split {A} {p} P? (z ∷ zs) with split P? zs | P? z
+... | ⟨ xs , ⟨ ys , (⟨ merge , ⟨ Pxs , ¬Pys ⟩ ⟩) ⟩ ⟩ | yes Pz = ⟨ z ∷ xs , ⟨ ys , (⟨ left-∷ merge , ⟨ Pz ∷ Pxs , ¬Pys ⟩ ⟩) ⟩ ⟩
+... | ⟨ xs , ⟨ ys , (⟨ merge , ⟨ Pxs , ¬Pys ⟩ ⟩) ⟩ ⟩ | no ¬Pz = ⟨ xs , ⟨ z ∷ ys , (⟨ right-∷ merge , ⟨ Pxs , ¬Pz ∷ ¬Pys ⟩ ⟩) ⟩ ⟩
