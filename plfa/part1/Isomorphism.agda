@@ -40,6 +40,15 @@ postulate
       -----------------------
     → f ≡ g
 
+f : ℕ → ℕ → ℕ
+f a b = (_+ b) a
+
+g : ℕ → ℕ → ℕ
+g a b = (a +_) b
+
+_ : f ≡ g
+_ = refl
+
 infix 0 _≃_
 record _≃_ (A B : Set) : Set where
   field
