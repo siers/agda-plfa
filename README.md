@@ -7,4 +7,6 @@ this repo includes some of the practice exercises from PLFA:
   plfa.part1.Quantifiers: ∀-distrib-×, (∃[ x ] (x + y ≡ z)) ⇔ (y ≤ z), ∃-distrib-⊎
   plfa.part1.Decidable: a few exercises, mostly copypasted definitions
   plfa.part1.Lists: reverse-distrib-++, sum-downFrom, Any-++-⇔, All-++-≃
+
+  plfa.part2.Lambda: _[_:=_]′, mul, ⊢mul
 ```
