@@ -202,6 +202,15 @@ data _∋_⦂_ : Context → Id → Type → Set where
 S′ : ∀ {Γ x y A B} → {x≢y : False (x ≟ y)} → Γ ∋ x ⦂ A → Γ , y ⦂ B ∋ x ⦂ A
 S′ {x≢y = x≢y} x = S (toWitnessFalse x≢y) x
 
+Γx : Context
+Γx = ∅ , "x" ⦂ (`ℕ ⇒ `ℕ)
+
+Γxx : Context
+Γxx = Γx , "x" ⦂ `ℕ
+
+Γxx∋x⦂ℕ : Γxx ∋ "x" ⦂ `ℕ
+Γxx∋x⦂ℕ = Z {Γx} {"x"} {`ℕ}
+
 infix  4  _⊢_⦂_
 
 data _⊢_⦂_ : Context → Term → Type → Set where
