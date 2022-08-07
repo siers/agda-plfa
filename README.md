@@ -9,4 +9,5 @@ this repo includes some of the practice exercises from PLFA:
   plfa.part1.Lists: reverse-distrib-++, sum-downFrom, Any-++-⇔, All-++-≃
 
   plfa.part2.Lambda: _[_:=_]′, mul, ⊢mul
+  plfa.part2.Properties: ⊢mul, automatic normalization of terms in ⊢mul-eval
 ```
