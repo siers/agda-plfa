@@ -1,15 +1,14 @@
 module Nr20220818 where
 
-open import Data.Fin using (Fin; toℕ; fromℕ<)
+open import Data.Fin as F using (Fin; toℕ; fromℕ<)
 open import Data.Nat as ℕ
 open import Data.Nat.Properties
 open import Data.Product
 open import Data.Unit using (tt)
 open import Level using (0ℓ)
-open import Function.Injection as Inj using (_↣_)
+open import Function.Base using (_∘_)
+open import Function.Bijection as Bij using (_⤖_)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; sym; cong; cong₂)
-open import Relation.Binary using (Setoid)
-import Relation.Binary.PropositionalEquality.Properties as EqProp
 
 data Suit : Set where
   spades : Suit
@@ -32,50 +31,68 @@ data Rank : Set where
   queen : Rank
   king : Rank
 
-_ : (1 < 2) ≡ (1 < 2)
-_ = refl
+fromRank : Rank → Fin 13
+fromRank ace = fromℕ< {0} (s≤s (z≤n {12}))
+fromRank two = fromℕ< {1} (s≤s (s≤s (z≤n {11})))
+fromRank three = fromℕ< (<ᵇ⇒< 2 13 tt)
+fromRank four = fromℕ< (<ᵇ⇒< 3 13 tt)
+fromRank five = fromℕ< (<ᵇ⇒< 4 13 tt)
+fromRank six = fromℕ< (<ᵇ⇒< 5 13 tt)
+fromRank seven = fromℕ< (<ᵇ⇒< 6 13 tt)
+fromRank eight = fromℕ< (<ᵇ⇒< 7 13 tt)
+fromRank nine = fromℕ< (<ᵇ⇒< 8 13 tt)
+fromRank ten = fromℕ< (<ᵇ⇒< 9 13 tt)
+fromRank jack = fromℕ< (<ᵇ⇒< 10 13 tt)
+fromRank queen = fromℕ< (<ᵇ⇒< 11 13 tt)
+fromRank king = fromℕ< (<ᵇ⇒< 12 13 tt)
 
--- _ : 2 < 12
--- _ = <ᵇ⇒< 2 12 tt
+toRank : Fin 13 → Rank
+toRank F.zero = ace
+toRank (F.suc F.zero) = two
+toRank (F.suc (F.suc F.zero)) = three
+toRank (F.suc (F.suc (F.suc F.zero))) = four
+toRank (F.suc (F.suc (F.suc (F.suc F.zero)))) = five
+toRank (F.suc (F.suc (F.suc (F.suc (F.suc F.zero))))) = six
+toRank (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc F.zero)))))) = seven
+toRank (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc F.zero))))))) = eight
+toRank (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc F.zero)))))))) = nine
+toRank (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc F.zero))))))))) = ten
+toRank (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc F.zero)))))))))) = jack
+toRank (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc F.zero))))))))))) = queen
+toRank (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc F.zero)))))))))))) = king
 
-rank : Rank → Fin 14
-rank ace = fromℕ< {0} (s≤s (z≤n {13}))
-rank two = fromℕ< {1} (s≤s (s≤s (z≤n {12})))
-rank three = fromℕ< (<ᵇ⇒< 2 14 tt)
-rank four = fromℕ< (<ᵇ⇒< 4 14 tt)
-rank five = fromℕ< (<ᵇ⇒< 5 14 tt)
-rank six = fromℕ< (<ᵇ⇒< 6 14 tt)
-rank seven = fromℕ< (<ᵇ⇒< 7 14 tt)
-rank eight = fromℕ< (<ᵇ⇒< 8 14 tt)
-rank nine = fromℕ< (<ᵇ⇒< 9 14 tt)
-rank ten = fromℕ< (<ᵇ⇒< 10 14 tt)
-rank jack = fromℕ< (<ᵇ⇒< 11 14 tt)
-rank queen = fromℕ< (<ᵇ⇒< 12 14 tt)
-rank king = fromℕ< (<ᵇ⇒< 13 14 tt)
-
-_ : toℕ (rank jack) ≡ 11
-_ = refl
-
-rs : Setoid 0ℓ 0ℓ
-rs = EqProp.setoid Rank
-
-ri : Rank ↣ Fin 14
-ri = Inj.injection rank proof
+ri : Rank ⤖ Fin 13
+ri = Bij.bijection fromRank toRank inj inv
   where
-  proof : ∀ {ra : Rank} {rb : Rank} → rank ra ≡ rank rb → ra ≡ rb
-  proof {ace} {ace} refl = refl
-  proof {two} {two} refl = refl
-  proof {three} {three} refl = refl
-  proof {four} {four} refl = refl
-  proof {five} {five} refl = refl
-  proof {six} {six} refl = refl
-  proof {seven} {seven} refl = refl
-  proof {eight} {eight} refl = refl
-  proof {nine} {nine} refl = refl
-  proof {ten} {ten} refl = refl
-  proof {jack} {jack} refl = refl
-  proof {queen} {queen} refl = refl
-  proof {king} {king} refl = refl
+  inj : ∀ {ra : Rank} {rb : Rank} → fromRank ra ≡ fromRank rb → ra ≡ rb
+  inj {ace} {ace} refl = refl
+  inj {two} {two} refl = refl
+  inj {three} {three} refl = refl
+  inj {four} {four} refl = refl
+  inj {five} {five} refl = refl
+  inj {six} {six} refl = refl
+  inj {seven} {seven} refl = refl
+  inj {eight} {eight} refl = refl
+  inj {nine} {nine} refl = refl
+  inj {ten} {ten} refl = refl
+  inj {jack} {jack} refl = refl
+  inj {queen} {queen} refl = refl
+  inj {king} {king} refl = refl
+
+  inv : ∀ (f : Fin 13) → fromRank (toRank f) ≡ f
+  inv F.zero = refl
+  inv (F.suc F.zero) = refl
+  inv (F.suc (F.suc F.zero)) = refl
+  inv (F.suc (F.suc (F.suc F.zero))) = refl
+  inv (F.suc (F.suc (F.suc (F.suc F.zero)))) = refl
+  inv (F.suc (F.suc (F.suc (F.suc (F.suc F.zero))))) = refl
+  inv (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc F.zero)))))) = refl
+  inv (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc F.zero))))))) = refl
+  inv (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc F.zero)))))))) = refl
+  inv (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc F.zero))))))))) = refl
+  inv (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc F.zero)))))))))) = refl
+  inv (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc F.zero))))))))))) = refl
+  inv (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc (F.suc F.zero)))))))))))) = refl
 
 card : Rank → Suit → Rank × Suit
 card = _,_
