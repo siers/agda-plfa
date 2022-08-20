@@ -10,6 +10,13 @@ open import Function.Base using (_∘_)
 open import Function.Bijection as Bij using (_⤖_)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; sym; cong; cong₂)
 
+open import Data.List
+open import Data.List.Relation.Unary.Unique.Propositional using (Unique; al)
+open import Data.List.Relation.Unary.AllPairs
+open import Relation.Nullary.Decidable using (toWitness)
+import Relation.Unary as U
+open import Relation.Nullary.Negation using (¬?)
+
 data Suit : Set where
   spades : Suit
   hearts : Suit
@@ -96,3 +103,12 @@ ri = Bij.bijection fromRank toRank inj inv
 
 card : Rank → Suit → Rank × Suit
 card = _,_
+
+l : List ℕ
+l = 1 ∷ 5 ∷ 2 ∷ 4 ∷ []
+
+decUnique : U.Decidable Unique
+decUnique = allPairs? (λ a b → ¬? (a ≟ b))
+
+_ : Unique l
+_ = toWitness {_} {_} {decUnique l} tt
