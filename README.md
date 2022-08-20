@@ -10,4 +10,6 @@ this repo includes some of the practice exercises from PLFA:
 
   plfa.part2.Lambda: _[_:=_]′, mul, ⊢mul
   plfa.part2.Properties: ⊢mul, automatic normalization of terms in ⊢mul-eval
+
+but also just some exploratory agda "sketches" in sandbox/
 ```
