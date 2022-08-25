@@ -69,6 +69,10 @@ _ = C (⟨I⟩ I)
 _ : Can (⟨⟩ I O O)
 _ = C (⟨I⟩ O O)
 
+-- Some of this would probably be simpler, if I would exploit the fact that
+-- binary strings "…DCBA" are equivalent to "… + D * 2^3 + C * 2^2 + B * 2^1 + A * 2^0 : ℕ",
+-- but it might be overkill and I don't think that was the intented way of solving this exercise.
+
 inc-can-long : ∀ {b : Bin} → Can b → Can (inc b)
 inc-can-long {⟨⟩} (C ())
 inc-can-long {⟨⟩ O} ⟨0⟩ = C ⟨I⟩
