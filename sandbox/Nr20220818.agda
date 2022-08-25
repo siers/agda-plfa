@@ -17,6 +17,10 @@ open import Relation.Nullary.Decidable using (toWitness)
 import Relation.Unary as U
 open import Relation.Nullary.Negation using (¬?)
 
+open import Relation.Binary.PropositionalEquality using (setoid)
+open import Data.List.Relation.Unary.Any using (Any; index; map; here; there)
+open import Data.List.Relation.Unary.Enumerates.Setoid (setoid (Fin 1))
+
 data Suit : Set where
   spades : Suit
   hearts : Suit
@@ -112,3 +116,9 @@ decUnique = allPairs? (λ a b → ¬? (a ≟ b))
 
 _ : Unique l
 _ = toWitness {_} {_} {decUnique l} tt
+
+el : List (Fin 1)
+el = F.zero ∷ []
+
+ln : IsEnumeration (F.zero ∷ [])
+ln F.zero = here refl
