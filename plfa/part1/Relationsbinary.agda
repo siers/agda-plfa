@@ -4,7 +4,7 @@ import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; cong; sym; trans)
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; step-≡; _∎)
 
-open import Agda.Builtin.Sigma
+open import Data.Product
 open import Function using (_∘_; _∋_)
 open import Data.String.Base using (String; _++_)
 open import Data.List using (List; _∷_; []; intersperse; foldl)
@@ -12,8 +12,9 @@ open import Data.Nat using (ℕ; zero; _+_; _*_; _≤_; suc; s≤s; z≤n; ≢-n
 open import Data.Nat.Properties using (+-identityʳ; +-suc; +-assoc; +-comm; m≤n*m; ≤-trans; ≤-step; *-distribˡ-+)
 open import Data.Nat.Show using (show)
 open import Data.Empty using (⊥)
+-- open import Function.Inverse using ()
 
-open import IO using (run; putStrLn)
+-- open import IO using (run; putStrLn)
 open import Level using (0ℓ)
 
 data Bin : Set where
@@ -161,25 +162,59 @@ one≤from {b I} (o I) = ≤-step (≤-trans (one≤from o) (m≤n*m (from b) (s
   (to (from b)) O ≡⟨ cong (_O) step ⟩
   b O ∎
 
-≡-to-from : ∀ (p : Σ Bin Can) → to (from (fst p)) ≡ (fst p)
-≡-to-from (_ , ⟨O⟩) = refl
-≡-to-from (_ , (C ⟨I⟩)) = refl
-≡-to-from (b O , c@(C (o O))) = ≡-to-from-bO c (≡-to-from (b , C o))
-≡-to-from (b I , (C (o I))) = begin
+≡-to-from : ∀ {b} → Can b → to (from b) ≡ b
+≡-to-from (⟨O⟩) = refl
+≡-to-from (C ⟨I⟩) = refl
+≡-to-from {b O} c@(C (o O)) = ≡-to-from-bO c (≡-to-from (C o))
+≡-to-from {b I} (C (o I)) = begin
   to (from (b I)) ≡⟨⟩
   inc (to (2 * (from b))) ≡⟨⟩
-  inc (to (from (b O))) ≡⟨ cong inc (≡-to-from-bO (C (o O)) (≡-to-from (b , C o))) ⟩
+  inc (to (from (b O))) ≡⟨ cong inc (≡-to-from-bO (C (o O)) (≡-to-from (C o))) ⟩
   inc (b O) ≡⟨⟩
   b I ∎
 
--- TODO: refactor ≡-to-from to to-can/inc-can
-≡-from-to : ∀ {n} → from-can (to-can n) ≡ n
-≡-from-to {zero} = refl
-≡-from-to {suc n} = begin
+≡-to-from-sigma : ∀ (p : Σ Bin Can) → to (from (proj₁ p)) ≡ (proj₁ p)
+≡-to-from-sigma (_ , ⟨O⟩) = refl
+≡-to-from-sigma (_ , (C ⟨I⟩)) = refl
+≡-to-from-sigma (b O , c@(C (o O))) = ≡-to-from-bO c (≡-to-from-sigma (b , C o))
+≡-to-from-sigma (b I , (C (o I))) = begin
+  to (from (b I)) ≡⟨⟩
+  inc (to (2 * (from b))) ≡⟨⟩
+  inc (to (from (b O))) ≡⟨ cong inc (≡-to-from-bO (C (o O)) (≡-to-from-sigma (b , C o))) ⟩
+  inc (b O) ≡⟨⟩
+  b I ∎
+
+≡-from-to-can : ∀ {n} → from-can (to-can n) ≡ n
+≡-from-to-can {zero} = refl
+≡-from-to-can {suc n} = begin
   from-can (to-can (suc n)) ≡⟨⟩
   from-can (inc-can (to-can n)) ≡⟨ inc-suc-comm (to-can n) ⟩
-  suc (from-can (to-can n)) ≡⟨ cong suc (≡-from-to {n}) ⟩
+  suc (from-can (to-can n)) ≡⟨ cong suc (≡-from-to-can {n}) ⟩
   suc n ∎
+
+≡One : ∀ {b : Bin} (ob ob′ : One b) → ob ≡ ob′
+≡One ⟨I⟩ ⟨I⟩ = refl
+≡One (o O) (o′ O) = cong (_O) (≡One o o′)
+≡One (o I) (o′ I) = cong (_I) (≡One o o′)
+
+≡Can : ∀ {b : Bin} (cb cb′ : Can b) → cb ≡ cb′
+≡Can {⟨⟩ O} ⟨O⟩ ⟨O⟩ = refl
+≡Can {⟨⟩ O} (⟨O⟩) (C (() O))
+≡Can {⟨⟩ O} (C (() O)) (⟨O⟩)
+≡Can (C o) (C o′) = cong C (≡One o o′)
+
+proj₁≡→Can≡ : {cb cb′ : ∃[ b ] Can b} → proj₁ cb ≡ proj₁ cb′ → cb ≡ cb′
+proj₁≡→Can≡ {b , c} {b′ , c′} refl = cong (b ,_) (≡Can c c′)
+
+-- ≡-to-from-can : ∀ {b} → (c : Can b) → to-can (from-can c) ≡ c -- this won't type check 😭
+-- ≡-to-from-can : ∀ (cb : Σ Bin Can) → to-can (from-can (proj₂ cb)) ≡ (Can ∋ (proj₂ cb))
+-- ≡-to-from-can = ?
+-- ≡-to-from-can (b , c) = begin
+--   to-can (from-can c) ≡⟨⟩
+--   to-can (from b) ≡⟨⟩
+--   to-can (from b) ≡⟨ proj₁≡→Can≡ (≡-to-from c) ⟩
+--   c
+--   ∎
 
 outputs : List String
 outputs =
@@ -192,4 +227,4 @@ outputs =
   ("(show ∘ from ∘ to) 1000 = " ++ ((show ∘ from ∘ to) 1000)) ∷
   []
 
-main = run {0ℓ} ((putStrLn ∘ foldl (_++_) "" ∘ intersperse "\n") outputs)
+-- main = run {0ℓ} ((putStrLn ∘ foldl (_++_) "" ∘ intersperse "\n") outputs)
