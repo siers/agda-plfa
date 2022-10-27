@@ -1,4 +1,4 @@
-module Nr20220818 where
+module sandbox.Nr20220818 where
 
 open import Data.Fin as F using (Fin; toℕ; fromℕ<)
 open import Data.Nat as ℕ
@@ -11,7 +11,7 @@ open import Function.Bijection as Bij using (_⤖_)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; sym; cong; cong₂)
 
 open import Data.List
-open import Data.List.Relation.Unary.Unique.Propositional using (Unique; al)
+open import Data.List.Relation.Unary.Unique.Propositional using (Unique)
 open import Data.List.Relation.Unary.AllPairs
 open import Relation.Nullary.Decidable using (toWitness)
 import Relation.Unary as U
@@ -19,7 +19,7 @@ open import Relation.Nullary.Negation using (¬?)
 
 open import Relation.Binary.PropositionalEquality using (setoid)
 open import Data.List.Relation.Unary.Any using (Any; index; map; here; there)
-open import Data.List.Relation.Unary.Enumerates.Setoid (setoid (Fin 1))
+open import Data.List.Relation.Unary.Enumerates.Setoid
 
 data Suit : Set where
   spades : Suit
@@ -120,5 +120,5 @@ _ = toWitness {_} {_} {decUnique l} tt
 el : List (Fin 1)
 el = F.zero ∷ []
 
-ln : IsEnumeration (F.zero ∷ [])
+ln : IsEnumeration (setoid (Fin 1)) (F.zero ∷ [])
 ln F.zero = here refl
