@@ -2,12 +2,19 @@
 
 module sandbox.Nr20221027 where
 
+open import Function.Base using (_on_; _∘_)
+open import Data.Product using (uncurry; _,_; _×_)
 open import Data.Bool using (Bool; if_then_else_; true; false)
-open import Data.List.Base
+open import Data.List.Base hiding (_++_)
 open import Data.Char
+import Data.Char as Char
+import Data.String as String
 open import Data.String hiding (_<_; length)
-open import Data.String.Properties renaming (_==_ to _≡ᵇ_)
-open import Data.Nat hiding (_≡ᵇ_)
+open import Data.String.Properties renaming (_==_ to _≡ᵇˢ_)
+open import Data.Nat
+
+open import IO
+import Level
 
 data Edit : Set where
   copy : String → Edit
@@ -21,21 +28,30 @@ diff : List String → List String → List Edit
 diff [] [] = []
 diff (a ∷ aa) [] = del a ∷ diff aa []
 diff [] (b ∷ bb) = ins b ∷ diff [] bb
--- diff A@(a ∷ aa) B@(b ∷ bb) = copy a ∷ diff aa bb
-diff A@(a ∷ aa) B@(b ∷ bb) with a ≡ᵇ b
-... | true = copy a ∷ diff aa bb
-... | false = shortest (del a ∷ diff aa B) (ins b ∷ diff A bb)
+diff A@(a ∷ aa) B@(b ∷ bb) =
+  if a ≡ᵇˢ b
+  then copy a ∷ diff aa bb
+  else shortest (del a ∷ diff aa B) (ins b ∷ diff A bb)
 
--- diff : List String → List String → List Edit
--- diff [] [] = []
--- diff (a ∷ aa) [] = del a ∷ diff aa []
--- diff [] (b ∷ bb) = ins b ∷ diff [] bb
--- diff A@(a ∷ aa) B@(b ∷ bb) with a ≡ᵇ b
--- ... | true = copy a ∷ diff aa bb
--- ... | false = shortest (diff' (inj₁ a) aa bb) (diff' (inj₂ b) aa bb)
--- -- ... | false = (del a ∷ diff aa B)
--- -- ... | false = (ins b ∷ diff A bb)
---   where
---     diff' : String ⊎ String → List String → List String → List Edit
---     diff' (inj₁ a) aa bb = ins b ∷ diff (a ∷ aa) bb
---     diff' (inj₂ b) aa bb = del a ∷ diff aa (b ∷ bb)
+showEdit : Edit → String
+showEdit (copy s) = "\x1b[0m" ++ s
+showEdit (ins s) = "\x1b[31m+" ++ s
+showEdit (del s) = "\x1b[32m-" ++ s
+
+diffString : String → String → String
+diffString a b = (a ++ "/" ++ b ++ ": ") ++ joinEdits ((diff on charStrings) a b)
+  where
+    joinEdits : List Edit → String
+    joinEdits = (_++ "\x1b[0m") ∘ String.intersperse "" ∘ map showEdit
+
+    charStrings : String → List String
+    charStrings = map String.fromChar ∘ String.toList
+
+diffStrings : List (String × String)
+diffStrings =
+  ("gello" , "hellod") ∷
+  ("gelloed" , "hello world") ∷
+  -- ("es šodien gāju pa ielu" , "tu šodien gāji pa tiltu") ∷ -- CPU 100%, never finished
+  []
+
+main = run {Level.zero} (IO.List.mapM (putStrLn ∘ uncurry diffString) diffStrings)
