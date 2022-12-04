@@ -96,10 +96,15 @@ open PermutationReasoning
 _ : 1 ∷ 2 ∷ 3 ∷ [] ↭ 3 ∷ 1 ∷ 2 ∷ []
 _ = trans (prep 1 (swap 2 3 refl)) (swap 1 3 refl)
 
-data Interleave {A : Set} : Bool → (x y z : List A) → Set where
-  empty : {z : List A} → Interleave true [] [] z
-  left : {a : A} {x y z : List A} → Interleave true x y z → Interleave false (a ∷ x) y (a ∷ z)
-  right : {a : A} {x y z : List A} → Interleave false x y z → Interleave true x (a ∷ y) (a ∷ z)
+data InterleaveL {A : Set} : (x y z : List A) → Set
+data InterleaveR {A : Set} : (x y z : List A) → Set
 
-intl : Interleave {ℕ} false (1 ∷ 3 ∷ []) (2 ∷ []) (1 ∷ 2 ∷ 3 ∷ [])
+data InterleaveL {A} where
+  left : {a : A} {x y z : List A} → InterleaveR x y z → InterleaveL (a ∷ x) y (a ∷ z)
+
+data InterleaveR {A} where
+  empty : {z : List A} → InterleaveR [] [] z
+  right : {a : A} {x y z : List A} → InterleaveL x y z → InterleaveR x (a ∷ y) (a ∷ z)
+
+intl : InterleaveL {ℕ} (1 ∷ 3 ∷ []) (2 ∷ []) (1 ∷ 2 ∷ 3 ∷ [])
 intl = left (right (left (empty)))
