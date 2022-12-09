@@ -96,15 +96,13 @@ open PermutationReasoning
 _ : 1 ∷ 2 ∷ 3 ∷ [] ↭ 3 ∷ 1 ∷ 2 ∷ []
 _ = trans (prep 1 (swap 2 3 refl)) (swap 1 3 refl)
 
-data InterleaveL {A : Set} : (x y z : List A) → Set
-data InterleaveR {A : Set} : (x y z : List A) → Set
+data Interleave {A : Set} : (x y z : List A) → Set where
+  empty : Interleave [] [] []
+  more : {a : A} {x y z : List A} → Interleave x y z → Interleave y (a ∷ x) (a ∷ z)
 
-data InterleaveL {A} where
-  left : {a : A} {x y z : List A} → InterleaveR x y z → InterleaveL (a ∷ x) y (a ∷ z)
+data Interleaving {A : Set} : (x y z : List A) → Set where
+  interleavingR : {x y z : List A} → Interleave y x z → Interleaving x y z
+  interleavingL : {x y z : List A} → Interleave x y z → Interleaving x y z
 
-data InterleaveR {A} where
-  empty : {z : List A} → InterleaveR [] [] z
-  right : {a : A} {x y z : List A} → InterleaveL x y z → InterleaveR x (a ∷ y) (a ∷ z)
-
-intl : InterleaveL {ℕ} (1 ∷ 3 ∷ []) (2 ∷ []) (1 ∷ 2 ∷ 3 ∷ [])
-intl = left (right (left (empty)))
+intl : Interleaving (1 ∷ 3 ∷ []) (2 ∷ []) (1 ∷ 2 ∷ 3 ∷ [])
+intl = interleavingR (more (more (more empty)))
