@@ -90,7 +90,7 @@ decUnique = allPairs? (λ a b → ¬? (decCard a b))
 _ : Unique deck
 _ = toWitness {_} {_} {decUnique deck} tt
 
-open import Data.List.Relation.Binary.Permutation.Propositional
+open import Data.List.Relation.Binary.Permutation.Propositional as LPr
 open PermutationReasoning
 
 _ : 1 ∷ 2 ∷ 3 ∷ [] ↭ 3 ∷ 1 ∷ 2 ∷ []
@@ -106,3 +106,20 @@ data Interleaving {A : Set} : (x y z : List A) → Set where
 
 intl : Interleaving (1 ∷ 3 ∷ []) (2 ∷ []) (1 ∷ 2 ∷ 3 ∷ [])
 intl = interleavingR (more (more (more empty)))
+
+ShuffleInvariant : Stack → Card → Stack → Stack → Stack → Set
+ShuffleInvariant deck joker andar bahar rest = (∃ λ shuffle → (Interleaving andar bahar shuffle × deck ≡ ([ joker ] ++ shuffle ++ rest)))
+
+postulate fakeInvariant : Set -- λ deck joker andar bahar rest → (∃ λ shuffle → (Interleaving andar bahar shuffle × deck ↭ ([ joker ] ++ shuffle ++ rest)))
+
+data X : (x : ℕ) → (y : ℕ) → x ≡ y → Set where
+  x : X 1 1 refl
+
+data AndarBahar (deck : Stack) : (joker : Card) (andar bahar rest : Stack) (invariant : ShuffleInvariant deck joker andar bahar rest) → Set where
+  start : (joker : Card) (rest : Stack) → (order : deck ≡ ([ joker ] ++ rest)) → AndarBahar deck joker [] [] rest ([] , (interleavingL empty , order))
+  deal :
+    (joker next : Card) (andar bahar rest : Stack) →
+    (invariant : ShuffleInvariant deck joker andar bahar (next ∷ rest)) → AndarBahar deck joker andar bahar (next ∷ rest) invariant →
+    (invariant′ : ShuffleInvariant deck joker andar bahar rest) → AndarBahar deck joker andar bahar rest invariant′
+
+-- advance : (joker next : Card) (andar bahar rest : Stack) → AndarBahar deck joker -- fuuuuck, this don't seem right
