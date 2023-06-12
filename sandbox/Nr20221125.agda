@@ -10,11 +10,14 @@ open import Data.Unit using (tt)
 open import Level using (0ℓ)
 open import Function.Base using (_∘_)
 open import Function.Bijection as Bij using (_⤖_)
-open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; sym; cong; cong₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; sym; cong; cong₂; trans)
+open import Data.Unit
+import Data.Maybe
 
 open import Data.List
 open import Data.List.Relation.Unary.Unique.Propositional using (Unique)
 open import Data.List.Relation.Unary.AllPairs
+open import Data.List.Properties using (unfold-reverse; ++-assoc)
 open import Relation.Nullary.Decidable using (toWitness)
 import Relation.Unary as Un
 import Relation.Binary as Bin
@@ -90,12 +93,12 @@ decUnique = allPairs? (λ a b → ¬? (decCard a b))
 _ : Unique deck
 _ = toWitness {_} {_} {decUnique deck} tt
 
-open import Data.List.Relation.Binary.Permutation.Propositional as LPr
-open PermutationReasoning
+open import Data.List.Relation.Binary.Permutation.Propositional as LPr using (_↭_; prep; swap; refl) renaming (trans to ↭-trans)
 
 _ : 1 ∷ 2 ∷ 3 ∷ [] ↭ 3 ∷ 1 ∷ 2 ∷ []
-_ = trans (prep 1 (swap 2 3 refl)) (swap 1 3 refl)
+_ = ↭-trans (prep 1 (swap 2 3 refl)) (swap 1 3 refl)
 
+-- interleaving x and y gives you z
 data Interleave {A : Set} : (x y z : List A) → Set where
   empty : Interleave [] [] []
   more : {a : A} {x y z : List A} → Interleave x y z → Interleave y (a ∷ x) (a ∷ z)
@@ -107,19 +110,48 @@ data Interleaving {A : Set} : (x y z : List A) → Set where
 intl : Interleaving (1 ∷ 3 ∷ []) (2 ∷ []) (1 ∷ 2 ∷ 3 ∷ [])
 intl = interleavingR (more (more (more empty)))
 
-ShuffleInvariant : Stack → Card → Stack → Stack → Stack → Set
-ShuffleInvariant deck joker andar bahar rest = (∃ λ shuffle → (Interleaving andar bahar shuffle × deck ≡ ([ joker ] ++ shuffle ++ rest)))
+-- deck  =  joker ++ shuffle ++ rest  =  joker ++ (shuffle ~ interleaving andar bahar) ++ rest
+ShuffleInvariant : Stack → Card → Stack → Stack → Stack → Stack → Set
+ShuffleInvariant   deck    joker  a       b       shuffle rest =
+  Interleave a b shuffle × (deck ≡ (joker ∷ (reverse shuffle ++ rest)))
 
-postulate fakeInvariant : Set -- λ deck joker andar bahar rest → (∃ λ shuffle → (Interleaving andar bahar shuffle × deck ↭ ([ joker ] ++ shuffle ++ rest)))
+data X : (x : ℕ) → (y : ℕ) → List ℕ → x ≡ y → Set where
+  -- unsurprisingly, I can put a value in a type
+  xx : X 1 1 [] refl
+  -- I can ask for values to be specific as well
+  yy : X 2 2 [] refl → X 3 3 [] refl
+  -- can't use pattern matching in "a" or "b" (that also excludes matching against "l")
+  zz : (l : List ℕ) → (eq : 1 ≡ 2) → ( a , b : List ℕ × List ℕ ) → X 1 2 (1 ∷ l) eq → X 1 2 [] eq
 
-data X : (x : ℕ) → (y : ℕ) → x ≡ y → Set where
-  x : X 1 1 refl
+≡-comm : ∀ {A : Set} {x y : A} → (x ≡ y) → (y ≡ x)
+≡-comm refl = refl
 
-data AndarBahar (deck : Stack) : (joker : Card) (andar bahar rest : Stack) (invariant : ShuffleInvariant deck joker andar bahar rest) → Set where
-  start : (joker : Card) (rest : Stack) → (order : deck ≡ ([ joker ] ++ rest)) → AndarBahar deck joker [] [] rest ([] , (interleavingL empty , order))
-  deal :
-    (joker next : Card) (andar bahar rest : Stack) →
-    (invariant : ShuffleInvariant deck joker andar bahar (next ∷ rest)) → AndarBahar deck joker andar bahar (next ∷ rest) invariant →
-    (invariant′ : ShuffleInvariant deck joker andar bahar rest) → AndarBahar deck joker andar bahar rest invariant′
+unfold-reverse-assoc : {A : Set} → (x : A) → (a b : List A) → reverse a ++ (x ∷ b) ≡ reverse (x ∷ a) ++ b
+unfold-reverse-assoc x a b = ≡-comm (trans (cong (_++ b) (unfold-reverse x a)) (++-assoc (reverse a) ([ x ]) b))
 
--- advance : (joker next : Card) (andar bahar rest : Stack) → AndarBahar deck joker -- fuuuuck, this don't seem right
+add-deck : (deck : Stack) → (shuffle : Stack) → (rest : Stack) → (joker : Card) → (next : Card)
+  → (deck ≡ joker ∷ (reverse shuffle ++ (next ∷ rest))) → (deck ≡ joker ∷ (reverse (next ∷ shuffle) ++ rest))
+add-deck deck shuffle rest joker next order =
+  trans order (cong (joker ∷_) (unfold-reverse-assoc next shuffle rest))
+
+-- 5 decks + joker
+data AndarBaharShuffle (deck : Stack) : (joker : Card) (one two shuffle rest : Stack) (invariant : ShuffleInvariant deck joker one two shuffle rest) → Set where
+  start : (joker : Card) (rest : Stack) → (order : deck ≡ ([ joker ] ++ rest)) → AndarBaharShuffle deck joker [] [] [] rest (empty , order)
+  andar :
+    (joker next : Card) (andar bahar shuffle rest : Stack) →
+    (( intlv , order ) : ShuffleInvariant deck joker andar bahar shuffle (next ∷ rest)) →
+    AndarBaharShuffle deck joker andar bahar shuffle (next ∷ rest) ( intlv , order ) →
+    AndarBaharShuffle deck joker bahar (next ∷ andar) (next ∷ shuffle) rest ( (more intlv) , (add-deck deck shuffle rest joker next order) )
+  bahar :
+    (joker next : Card) (andar bahar shuffle rest : Stack) →
+    (( intlv , order ) : ShuffleInvariant deck joker bahar andar shuffle (next ∷ rest)) →
+    AndarBaharShuffle deck joker bahar andar shuffle (next ∷ rest) ( intlv , order ) →
+    AndarBaharShuffle deck joker andar (next ∷ bahar) (next ∷ shuffle) rest ( (more intlv) , (add-deck deck shuffle rest joker next order) )
+
+x : (Data.List.head deck) ≡ Data.Maybe.just (card spades ace)
+x = refl
+
+rest = Data.List.drop 1 deck
+
+-- a : {invariant : ShuffleInvariant deck joker one two shuffle rest} → AndarBaharShuffle deck (card spades ace) [] [] [] rest invariant
+-- a = 1
