@@ -1,28 +1,26 @@
-module sandbox.Nr20221125 where
+module sandbox.Nr20230618 where
 
 open import Data.Bool using (Bool; true; false)
 open import Data.Fin as F using (Fin; toℕ; fromℕ<)
 open import Data.Sum hiding (swap)
+open import Data.Vec.Base
 open import Data.Nat as ℕ
 open import Data.Nat.Properties
 open import Data.Product hiding (swap)
-open import Data.Unit using (tt)
 open import Level using (0ℓ)
-open import Function.Base using (_∘_)
-open import Function.Bijection as Bij using (_⤖_)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; sym; cong; cong₂; trans)
-open import Data.Unit
 import Data.Maybe
+open import Data.Nat.DivMod using (_/_)
 
-open import Data.List
+open import Data.List hiding (_++_)
 open import Data.List.Relation.Unary.Unique.Propositional using (Unique)
 open import Data.List.Relation.Unary.AllPairs
 open import Data.List.Properties using (unfold-reverse; ++-assoc)
-open import Relation.Nullary.Decidable using (toWitness)
-import Relation.Unary as Un
+-- open import Relation.Nullary.Decidable using (toWitness)
+-- import Relation.Unary as Un
 import Relation.Binary as Bin
 import Relation.Nullary as Nul
-open import Relation.Nullary.Negation using (¬?)
+-- open import Relation.Nullary.Negation using (¬?)
 
 data Suit : Set where
   spades : Suit
@@ -87,110 +85,49 @@ decCard c@(card s r) c′@(card s′ r′) with decSuit s s′ | decRank r r′
 ... | Nul.no s≢s′  | _            = Nul.no λ{ refl → s≢s′ refl }
 ... | _            | Nul.no r≢r′  = Nul.no λ{ refl → r≢r′ refl }
 
-decUnique : Un.Decidable Unique
-decUnique = allPairs? (λ a b → ¬? (decCard a b))
+v1 : Vec ℕ 3
+v1 = 1 ∷ 2 ∷ 3 ∷ []
+v2 : Vec ℕ 2
+v2 = 6 ∷ 7 ∷ []
+v3 : Vec ℕ 5
+v3 = 1 ∷ 6 ∷ 2 ∷ 7 ∷ 3 ∷ []
+v4 : Vec ℕ 6
+v4 = 1 ∷ 5 ∷ 2 ∷ 6 ∷ 3 ∷ 7 ∷ []
+x : v1 ⋎ v2 ≡ v3
+x = refl
+y : v1 ⋎ (5 ∷ v2) ≡ v4
+y = refl
 
-_ : Unique deck
-_ = toWitness {_} {_} {decUnique deck} tt
-
-open import Data.List.Relation.Binary.Permutation.Propositional as LPr using (_↭_; prep; swap; refl) renaming (trans to ↭-trans)
-
-_ : 1 ∷ 2 ∷ 3 ∷ [] ↭ 3 ∷ 1 ∷ 2 ∷ []
-_ = ↭-trans (prep 1 (swap 2 3 refl)) (swap 1 3 refl)
-
--- interleaving x and y gives you z
-data Interleave {A : Set} : (x y z : List A) → Set where
-  empty : Interleave [] [] []
-  more : {a : A} {x y z : List A} → Interleave x y z → Interleave y (a ∷ x) (a ∷ z)
-
-data Interleaving {A : Set} : (x y z : List A) → Set where
-  interleavingR : {x y z : List A} → Interleave y x z → Interleaving x y z
-  interleavingL : {x y z : List A} → Interleave x y z → Interleaving x y z
-
-intl : Interleaving (1 ∷ 3 ∷ []) (2 ∷ []) (1 ∷ 2 ∷ 3 ∷ [])
-intl = interleavingR (more (more (more empty)))
-
-data X : (x : ℕ) → (y : ℕ) → List ℕ → x ≡ y → Set where
-  -- unsurprisingly, I can put a value in a type
-  xx : X 1 1 [] refl
-  -- I can ask for values to be specific as well
-  yy : X 2 2 [] refl → X 3 3 [] refl
-  -- can't use pattern matching in "a" or "b" (that also excludes matching against "l")
-  zz : (l : List ℕ) → (eq : 1 ≡ 2) → ( a , b : List ℕ × List ℕ ) → X 1 2 (1 ∷ l) eq → X 1 2 [] eq
-
--- deck  =  joker ++ shuffle ++ rest  =  joker ++ (shuffle ~ interleaving andar bahar) ++ rest
-ShuffleInvariant : Stack → Card → Stack → Stack → Stack → Stack → ℕ → Set
-ShuffleInvariant   deck    joker  a       b       shuffle rest n =
-  Interleave a b shuffle × (deck ≡ (joker ∷ (reverse shuffle ++ rest))) × length shuffle ≡ n
-
-unfold-reverse-assoc : {A : Set} → (x : A) → (a b : List A) → reverse a ++ (x ∷ b) ≡ reverse (x ∷ a) ++ b
-unfold-reverse-assoc x a b = sym (trans (cong (_++ b) (unfold-reverse x a)) (++-assoc (reverse a) ([ x ]) b))
-
-≡-card-added : (deck : Stack) → (shuffle : Stack) → (rest : Stack) → (joker : Card) → (next : Card)
-  → (deck ≡ joker ∷ (reverse shuffle ++ (next ∷ rest)))
-  → (deck ≡ joker ∷ (reverse (next ∷ shuffle) ++ rest))
-≡-card-added deck shuffle rest joker next order =
-  trans order (cong (joker ∷_) (unfold-reverse-assoc next shuffle rest))
+-- irb(main):016:0> def diff1(n, int); int.to_a.map { |x| buckets = n.times.to_a.map { |m| (x + m) / n }; [buckets, buckets.sum, x] }; end
+-- => :diff1
+-- irb(main):017:0> diff1(3, (-5..20)).each(&method(:p)); nil
+-- irb(main):014:0> def check_diff1(n, int); int.to_a.all? { |x| buckets = n.times.to_a.map { |m| (x + m) / n }; buckets.sum == x }; end
+-- => :check_diff1
+-- irb(main):016:0> (1..100).all? { |x| diff1(x, (-1000..1000)) };
+-- => true
+postulate ≡-bucket-2 : (n : ℕ) → n ≡ (n + 1) / 2 + (n / 2)
 
 -- 1. make deck Vec n Card, add M for shuffle
 -- 2. Model cards as Fin or find some library that generically gives you equality decidables
 -- 3. prove or find proof that for AndarBaharShuffle deck N M where N < M has a next :: rest
-record AndarBaharShuffle (deck : Stack) (n : ℕ) : Set where
+record AndarBaharShuffle (n : ℕ) (m : ℕ) (deck : Vec Card n) : Set where
   field
     joker : Card
-    andar : Stack
-    bahar : Stack
-    shuffle : Stack
-    rest : Stack
-    invariant : ShuffleInvariant deck joker andar bahar shuffle rest n
+    andar : Vec Card ((m + 1) / 2)
+    bahar : Vec Card ((m + 0) / 2)
+    shuffle : Vec Card m
+    -- rest : Vec Card (((m + 0) / 2) + ((m + 1) / 2))
+    rest : Vec Card m
+    p1 : n ≤ m
+    p21 : ((m + 1) / 2) + ((m + 0) / 2) ≡ m
+    -- p22 : andar ⋎ bahar ≡ shuffle
+    -- invariant : andar ⋎ bahar ≡ rest  ×  deck ≡ joker ∷ (shuffle ++ rest)
 
--- deal-card : (deck : Stack) (n : ℕ) → AndarBaharShuffle deck n → AndarBaharShuffle deck (n + 1)
--- deal-card deck n abs = abs { shuffle  }
+-- unfold-reverse-assoc : {A : Set} → (x : A) → (a b : List A) → reverse a ++ (x ∷ b) ≡ reverse (x ∷ a) ++ b
+-- unfold-reverse-assoc x a b = sym (trans (cong (_++ b) (unfold-reverse x a)) (++-assoc (reverse a) ([ x ]) b))
 
-data AndarBaharPhase : Set where
-  andar : AndarBaharPhase
-  bahar : AndarBaharPhase
-
-data AndarBaharState (deck : Stack) : (n : ℕ) (phase : AndarBaharPhase) (shuffle : AndarBaharShuffle deck n) → Set where
-  start : (joker : Card) (shuffle : AndarBaharShuffle deck 0) → AndarBaharState deck 0 andar shuffle
-  -- bahar : AndarBaharState deck andar → AndarBaharState deck bahar
-  -- andar : AndarBaharState deck bahar → AndarBaharState deck andar
-  -- andar :
-  --   (joker next : Card) (andar bahar shuffle rest : Stack) →
-  --   (( intlv , order ) : ShuffleInvariant deck joker andar bahar shuffle (next ∷ rest)) →
-  --   AndarBaharShuffle deck joker andar bahar shuffle (next ∷ rest) ( intlv , order ) →
-  --   AndarBaharShuffle deck joker bahar (next ∷ andar) (next ∷ shuffle) rest ( (more intlv) , (add-deck deck shuffle rest joker next order) )
-  -- bahar :
-  --   (joker next : Card) (andar bahar shuffle rest : Stack) →
-  --   (( intlv , order ) : ShuffleInvariant deck joker bahar andar shuffle (next ∷ rest)) →
-  --   AndarBaharShuffle deck joker bahar andar shuffle (next ∷ rest) ( intlv , order ) →
-  --   AndarBaharShuffle deck joker andar (next ∷ bahar) (next ∷ shuffle) rest ( (more intlv) , (add-deck deck shuffle rest joker next order) )
-
--- -- 5 decks + joker
--- data AndarBaharShuffleX (deck : Stack) : (joker : Card) (one two shuffle rest : Stack) (invariant : ShuffleInvariant deck joker one two shuffle rest) → Set where
---   start' : (joker : Card) (rest : Stack) → (order : deck ≡ (joker ∷ rest)) → AndarBaharShuffleX deck joker [] [] [] rest (empty , order)
---   andar' :
---     (joker next : Card) (andar bahar shuffle rest : Stack) →
---     (( intlv , order ) : ShuffleInvariant deck joker andar bahar shuffle (next ∷ rest)) →
---     AndarBaharShuffleX deck joker andar bahar shuffle (next ∷ rest) ( intlv , order ) →
---     AndarBaharShuffleX deck joker bahar (next ∷ andar) (next ∷ shuffle) rest ( (more intlv) , (add-deck deck shuffle rest joker next order) )
---   bahar' :
---     (joker next : Card) (andar bahar shuffle rest : Stack) →
---     (( intlv , order ) : ShuffleInvariant deck joker bahar andar shuffle (next ∷ rest)) →
---     AndarBaharShuffleX deck joker bahar andar shuffle (next ∷ rest) ( intlv , order ) →
---     AndarBaharShuffleX deck joker andar (next ∷ bahar) (next ∷ shuffle) rest ( (more intlv) , (add-deck deck shuffle rest joker next order) )
-
--- joker = card spades ace
--- next1 = card spades two
-
--- x : (Data.List.head deck) ≡ Data.Maybe.just joker
--- x = refl
-
--- rest1 = Data.List.drop 1 deck
--- rest2 = Data.List.drop 2 deck
-
--- a1 : AndarBaharShuffle deck joker [] [] [] rest1 (empty , refl)
--- a1 = start joker rest1 refl
-
--- a2 : AndarBaharShuffle deck joker [ next1 ] [] [] rest2 (more empty , refl)
--- a2 = andar joker next1 [] [] [] rest1 ( more empty , refl ) a1
+-- ≡-card-added : (deck : Stack) → (shuffle : Stack) → (rest : Stack) → (joker : Card) → (next : Card)
+--   → (deck ≡ joker ∷ (reverse shuffle ++ (next ∷ rest)))
+--   → (deck ≡ joker ∷ (reverse (next ∷ shuffle) ++ rest))
+-- ≡-card-added deck shuffle rest joker next order =
+--   trans order (cong (joker ∷_) (unfold-reverse-assoc next shuffle rest))
